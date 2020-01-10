@@ -21,7 +21,7 @@ Summary: The VIM editor
 URL:     http://www.vim.org/
 Name: vim
 Version: %{baseversion}.%{patchlevel}
-Release: 5%{?dist}
+Release: 5%{?dist}.1
 License: Vim
 Group: Applications/Editors
 Source0: ftp://ftp.vim.org/pub/vim/unix/vim-%{baseversion}.tar.bz2
@@ -693,6 +693,7 @@ Patch3012: vim-7.3-manpage-typo-668894-675480.patch
 Patch3013: vim-manpagefixes-948566.patch
 Patch3014: vim-7.4-licensemacro-1151450.patch
 Patch3015: vim-7.4-ssh-keywords.patch
+Patch3016: vim-7.4-CVE-2016-1248.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: python-devel ncurses-devel gettext perl-devel
@@ -1477,6 +1478,7 @@ perl -pi -e "s,bin/nawk,bin/awk,g" runtime/tools/mve.awk
 %patch3013 -p1
 %patch3014 -p1
 %patch3015 -p1
+%patch3016 -p1
 
 perl -pi -e "s/test71.out//" src/testdir/Makefile
 
@@ -1984,6 +1986,9 @@ rm -rf %{buildroot}
 %{_datadir}/icons/hicolor/*/apps/*
 
 %changelog
+* Mon Dec 12 2016 Karsten Hopp <karsten@redhat.com> 7.4.629-5.1
+- add fix for CVE-2016-1248
+
 * Tue Mar 31 2015 Karsten Hopp <karsten@redhat.com> 7.4.629-5
 - update sshd_config and cpp syntax files
 
