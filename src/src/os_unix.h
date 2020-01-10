@@ -124,7 +124,7 @@
 #  define SIGDUMMYARG	0, 0, (struct sigcontext *)0
 # else
 #  define SIGPROTOARG	(int)
-#  define SIGDEFARG(s)	(s) int s;
+#  define SIGDEFARG(s)	(s) int s UNUSED;
 #  define SIGDUMMYARG	0
 # endif
 #else
@@ -184,10 +184,6 @@
 
 #define BASENAMELEN	(MAXNAMLEN - 5)
 
-#ifdef HAVE_ERRNO_H
-# include <errno.h>
-#endif
-
 #ifdef HAVE_PWD_H
 # include <pwd.h>
 #endif
@@ -201,6 +197,9 @@
 	|| defined(HAVE_SYSCTL) || defined(HAVE_SYSCONF)
 # define HAVE_TOTAL_MEM
 #endif
+
+
+#ifndef PROTO
 
 #ifdef VMS
 # include <unixio.h>
@@ -230,7 +229,11 @@
 # ifdef FEAT_GUI_GTK
 #  include "gui_gtk_vms.h"
 # endif
+#endif
 
+#endif /* PROTO */
+
+#ifdef VMS
 typedef struct dsc$descriptor   DESC;
 #endif
 
@@ -291,11 +294,24 @@ typedef struct dsc$descriptor   DESC;
 # endif
 #endif
 
-#if !defined(USR_VIMRC_FILE2) && defined(OS2)
-# define USR_VIMRC_FILE2 "$VIM/.vimrc"
+
+#if !defined(USR_EXRC_FILE2)
+# ifdef OS2
+#  define USR_VIMRC_FILE2	"$HOME/vimfiles/vimrc"
+# else
+#  ifdef VMS
+#   define USR_VIMRC_FILE2	"sys$login:vimfiles:vimrc"
+#  else
+#    define USR_VIMRC_FILE2	"~/.vim/vimrc"
+#  endif
+# endif
 #endif
-#if !defined(USR_VIMRC_FILE2) && defined(VMS)
-# define USR_VIMRC_FILE2 "sys$login:_vimrc"
+
+#if !defined(USR_VIMRC_FILE3) && defined(OS2)
+# define USR_VIMRC_FILE3 "$VIM/.vimrc"
+#endif
+#if !defined(USR_VIMRC_FILE3) && defined(VMS)
+# define USR_VIMRC_FILE3 "sys$login:_vimrc"
 #endif
 
 #ifndef USR_GVIMRC_FILE
@@ -306,9 +322,21 @@ typedef struct dsc$descriptor   DESC;
 # endif
 #endif
 
+#ifndef USR_GVIMRC_FILE2
+# ifdef OS2
+#  define USR_GVIMRC_FILE2	"$HOME/vimfiles/gvimrc"
+# else
+#  ifdef VMS
+#   define USR_GVIMRC_FILE2	"sys$login:vimfiles:gvimrc"
+#  else
+#   define USR_GVIMRC_FILE2	"~/.vim/gvimrc"
+#  endif
+# endif
+#endif
+
 #ifdef VMS
-# ifndef USR_GVIMRC_FILE2
-#  define USR_GVIMRC_FILE2  "sys$login:_gvimrc"
+# ifndef USR_GVIMRC_FILE3
+#  define USR_GVIMRC_FILE3  "sys$login:_gvimrc"
 # endif
 #endif
 
@@ -481,11 +509,6 @@ typedef struct dsc$descriptor   DESC;
 #  define mch_rename(src, dst) rename(src, dst)
 # else
 int mch_rename __ARGS((const char *src, const char *dest));
-# endif
-# ifdef VMS
-#  define mch_chdir(s) chdir(vms_fixfilename(s))
-# else
-#  define mch_chdir(s) chdir(s)
 # endif
 # ifndef VMS
 #  ifdef __MVS__

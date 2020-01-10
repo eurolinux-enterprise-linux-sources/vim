@@ -13,12 +13,8 @@ win_T *get_valid_window __ARGS((void *));
 void mzvim_check_threads __ARGS((void));
 void mzvim_reset_timer __ARGS((void));
 void *mzvim_eval_string __ARGS((char_u *str));
-struct Scheme_Object *mzvim_apply __ARGS((struct Scheme_Object *, int argc,
-    struct Scheme_Object **));
-int mzthreads_allowed (void);
-#ifdef FEAT_GUI_KDE
-void timer_proc (void);
-void mzscheme_kde_start_timer (void);
-void mzscheme_kde_stop_timer (void);
-#endif
+int mzthreads_allowed __ARGS((void));
+int mzscheme_main __ARGS((int argc, char **argv));
+void do_mzeval __ARGS((char_u *str, typval_T *rettv));
+int vim_main2 __ARGS((int argc, char **argv));
 /* vim: set ft=c : */

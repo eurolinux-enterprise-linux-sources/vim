@@ -99,6 +99,11 @@
 # define MB_TOUPPER(c)	TOUPPER_LOC(c)
 #endif
 
+/* Use our own isdigit() replacement, because on MS-Windows isdigit() returns
+ * non-zero for superscript 1.  Also avoids that isdigit() crashes for numbers
+ * below 0 and above 255.  */
+#define VIM_ISDIGIT(c) ((unsigned)(c) - '0' < 10)
+
 /* Like isalpha() but reject non-ASCII characters.  Can't be used with a
  * special key (negative value). */
 #ifdef EBCDIC
@@ -107,17 +112,11 @@
 # define ASCII_ISLOWER(c) islower(c)
 # define ASCII_ISUPPER(c) isupper(c)
 #else
-# define ASCII_ISALPHA(c) ((c) < 0x7f && isalpha(c))
-# define ASCII_ISALNUM(c) ((c) < 0x7f && isalnum(c))
-# define ASCII_ISLOWER(c) ((c) < 0x7f && islower(c))
-# define ASCII_ISUPPER(c) ((c) < 0x7f && isupper(c))
+# define ASCII_ISLOWER(c) ((unsigned)(c) - 'a' < 26)
+# define ASCII_ISUPPER(c) ((unsigned)(c) - 'A' < 26)
+# define ASCII_ISALPHA(c) (ASCII_ISUPPER(c) || ASCII_ISLOWER(c))
+# define ASCII_ISALNUM(c) (ASCII_ISALPHA(c) || VIM_ISDIGIT(c))
 #endif
-
-/* Use our own isdigit() replacement, because on MS-Windows isdigit() returns
- * non-zero for superscript 1.  Also avoids that isdigit() crashes for numbers
- * below 0 and above 255.  For complicated arguments and in/decrement use
- * vim_isdigit() instead. */
-#define VIM_ISDIGIT(c) ((c) >= '0' && (c) <= '9')
 
 /* macro version of chartab().
  * Only works with values 0-255!
@@ -127,15 +126,31 @@
 #ifdef FEAT_LANGMAP
 /*
  * Adjust chars in a language according to 'langmap' option.
- * NOTE that there is NO overhead if 'langmap' is not set; but even
- * when set we only have to do 2 ifs and an array lookup.
+ * NOTE that there is no noticeable overhead if 'langmap' is not set.
+ * When set the overhead for characters < 256 is small.
  * Don't apply 'langmap' if the character comes from the Stuff buffer.
  * The do-while is just to ignore a ';' after the macro.
  */
-# define LANGMAP_ADJUST(c, condition) do { \
+# ifdef FEAT_MBYTE
+#  define LANGMAP_ADJUST(c, condition) \
+    do { \
+	if (*p_langmap && (condition) && !KeyStuffed && (c) >= 0) \
+	{ \
+	    if ((c) < 256) \
+		c = langmap_mapchar[c]; \
+	    else \
+		c = langmap_adjust_mb(c); \
+	} \
+    } while (0)
+# else
+#  define LANGMAP_ADJUST(c, condition) \
+    do { \
 	if (*p_langmap && (condition) && !KeyStuffed && (c) >= 0 && (c) < 256) \
 	    c = langmap_mapchar[c]; \
     } while (0)
+# endif
+#else
+# define LANGMAP_ADJUST(c, condition) /* nop */
 #endif
 
 /*
@@ -211,23 +226,8 @@
 # endif
 #endif
 
-/*
- * Encryption macros.  Mohsin Ahmed, mosh@sasi.com 98-09-24
- * Based on zip/crypt sources.
- */
-
-#ifdef FEAT_CRYPT
-
-/* encode byte c, using temp t.  Warning: c must not have side effects. */
-# define ZENCODE(c, t)  (t = decrypt_byte(), update_keys(c), t^(c))
-
-/* decode byte c in place */
-# define ZDECODE(c)   update_keys(c ^= decrypt_byte())
-
-#endif
-
 #ifdef STARTUPTIME
-# define TIME_MSG(s) time_msg(s, NULL)
+# define TIME_MSG(s) { if (time_fd != NULL) time_msg(s, NULL); }
 #else
 # define TIME_MSG(s)
 #endif
@@ -258,6 +258,8 @@
  * PTR2CHAR(): get character from pointer.
  */
 #ifdef FEAT_MBYTE
+/* Get the length of the character p points to */
+# define MB_PTR2LEN(p)		(has_mbyte ? (*mb_ptr2len)(p) : 1)
 /* Advance multi-byte pointer, skip over composing chars. */
 # define mb_ptr_adv(p)	    p += has_mbyte ? (*mb_ptr2len)(p) : 1
 /* Advance multi-byte pointer, do not skip over composing chars. */
@@ -268,14 +270,17 @@
 # define mb_cptr2len(p)	    (enc_utf8 ? utf_ptr2len(p) : (*mb_ptr2len)(p))
 
 # define MB_COPY_CHAR(f, t) if (has_mbyte) mb_copy_char(&f, &t); else *t++ = *f++
-# define MB_CHARLEN(p)	    (has_mbyte ? mb_charlen(p) : STRLEN(p))
+# define MB_CHARLEN(p)	    (has_mbyte ? mb_charlen(p) : (int)STRLEN(p))
+# define MB_CHAR2LEN(c)	    (has_mbyte ? mb_char2len(c) : 1)
 # define PTR2CHAR(p)	    (has_mbyte ? mb_ptr2char(p) : (int)*(p))
 #else
+# define MB_PTR2LEN(p)		1
 # define mb_ptr_adv(p)		++p
 # define mb_cptr_adv(p)		++p
 # define mb_ptr_back(s, p)	--p
 # define MB_COPY_CHAR(f, t)	*t++ = *f++
 # define MB_CHARLEN(p)		STRLEN(p)
+# define MB_CHAR2LEN(c)		1
 # define PTR2CHAR(p)		((int)*(p))
 #endif
 
@@ -283,4 +288,18 @@
 # define DO_AUTOCHDIR if (p_acd) do_autochdir();
 #else
 # define DO_AUTOCHDIR
+#endif
+
+#if defined(FEAT_SCROLLBIND) && defined(FEAT_CURSORBIND)
+# define RESET_BINDING(wp)  (wp)->w_p_scb = FALSE; (wp)->w_p_crb = FALSE
+#else
+# if defined(FEAT_SCROLLBIND)
+#  define RESET_BINDING(wp)  (wp)->w_p_scb = FALSE
+# else
+#  if defined(FEAT_CURSORBIND)
+#   define RESET_BINDING(wp)  (wp)->w_p_crb = FALSE
+#  else
+#   define RESET_BINDING(wp)
+#  endif
+# endif
 #endif

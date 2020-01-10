@@ -49,6 +49,8 @@
  *	    option -b added: 01000101 binary output in normal format.
  * 16.05.00 Added VAXC changes by Stephen P. Wall
  * 16.05.00 Improved MMS file and merge for VMS by Zoltan Arpadffy
+ * 2011 March  Better error handling by Florian Zumbiehl.
+ * 2011 April  Formatting by Bram Moolenaar
  *
  * (c) 1990-1998 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
@@ -64,6 +66,9 @@
 # define _CRT_SECURE_NO_DEPRECATE
 # define _CRT_NONSTDC_NO_DEPRECATE
 #endif
+#if !defined(CYGWIN) && (defined(CYGWIN32) || defined(__CYGWIN__) || defined(__CYGWIN32__))
+# define CYGWIN
+#endif
 
 #include <stdio.h>
 #ifdef VAXC
@@ -77,7 +82,8 @@
 #if !defined(OS2) && defined(__EMX__)
 # define OS2
 #endif
-#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__BORLANDC__)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__BORLANDC__) \
+  || defined(CYGWIN)
 # include <io.h>	/* for setmode() */
 #else
 # ifdef UNIX
@@ -150,9 +156,6 @@ char osver[] = "";
 # endif
 #endif
 
-#if !defined(CYGWIN) && (defined(CYGWIN32) || defined(__CYGWIN__) || defined(__CYGWIN32__))
-# define CYGWIN
-#endif
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
 # define BIN_WRITE(yes) ((yes) ? "wb" : "wt")
@@ -206,8 +209,9 @@ char osver[] = "";
 
 /* Let's collect some prototypes */
 /* CodeWarrior is really picky about missing prototypes */
-static void exit_with_usage __P((char *));
-static int huntype __P((FILE *, FILE *, FILE *, char *, int, int, long));
+static void exit_with_usage __P((void));
+static void die __P((int));
+static int huntype __P((FILE *, FILE *, FILE *, int, int, long));
 static void xxdline __P((FILE *, char *, int));
 
 #define TRY_SEEK	/* attempt to use lseek, or skip forward by reading */
@@ -222,15 +226,16 @@ char hexxa[] = "0123456789abcdef0123456789ABCDEF", *hexx = hexxa;
 #define HEX_CINCLUDE 2
 #define HEX_BITS 3		/* not hex a dump, but bits: 01111001 */
 
-static void
-exit_with_usage(pname)
-char *pname;
+static char *pname;
+
+  static void
+exit_with_usage()
 {
   fprintf(stderr, "Usage:\n       %s [options] [infile [outfile]]\n", pname);
   fprintf(stderr, "    or\n       %s -r [-s [-]offset] [-c cols] [-ps] [infile [outfile]]\n", pname);
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "    -a          toggle autoskip: A single '*' replaces nul-lines. Default off.\n");
-  fprintf(stderr, "    -b          binary digit dump (incompatible with -p,-i,-r). Default hex.\n");
+  fprintf(stderr, "    -b          binary digit dump (incompatible with -ps,-i,-r). Default hex.\n");
   fprintf(stderr, "    -c cols     format <cols> octets per line. Default 16 (-i: 12, -ps: 30).\n");
   fprintf(stderr, "    -E          show characters in EBCDIC. Default ASCII.\n");
   fprintf(stderr, "    -g          number of octets per group in normal output. Default 2.\n");
@@ -251,6 +256,15 @@ char *pname;
   exit(1);
 }
 
+  static void
+die(ret)
+  int ret;
+{
+  fprintf(stderr, "%s: ", pname);
+  perror(NULL);
+  exit(ret);
+}
+
 /*
  * Max. cols binary characters are decoded from the input stream per line.
  * Two adjacent garbage characters after evaluated data delimit valid data.
@@ -258,12 +272,11 @@ char *pname;
  *
  * The name is historic and came from 'undo type opt h'.
  */
-static int
-huntype(fpi, fpo, fperr, pname, cols, hextype, base_off)
-FILE *fpi, *fpo, *fperr;
-char *pname;
-int cols, hextype;
-long base_off;
+  static int
+huntype(fpi, fpo, fperr, cols, hextype, base_off)
+  FILE *fpi, *fpo, *fperr;
+  int cols, hextype;
+  long base_off;
 {
   int c, ign_garb = 1, n1 = -1, n2 = 0, n3, p = cols;
   long have_off = 0, want_off = 0;
@@ -275,11 +288,11 @@ long base_off;
       if (c == '\r')	/* Doze style input file? */
 	continue;
 
-#if 0	/* this doesn't work when there is normal text after the hex codes in
-	   the last line that looks like hex */
-      if (c == ' ' || c == '\n' || c == '\t')  /* allow multiple spaces */
+      /* Allow multiple spaces.  This doesn't work when there is normal text
+       * after the hex codes in the last line that looks like hex, thus only
+       * use it for PostScript format. */
+      if (hextype == HEX_POSTSCRIPT && (c == ' ' || c == '\n' || c == '\t'))
 	continue;
-#endif
 
       n3 = n2;
       n2 = n1;
@@ -317,7 +330,8 @@ long base_off;
 
       if (base_off + want_off != have_off)
 	{
-	  fflush(fpo);
+	  if (fflush(fpo) != 0)
+	    die(3);
 #ifdef TRY_SEEK
 	  c = fseek(fpo, base_off + want_off - have_off, 1);
 	  if (c >= 0)
@@ -329,12 +343,14 @@ long base_off;
 	      return 5;
 	    }
 	  for (; have_off < base_off + want_off; have_off++)
-	    putc(0, fpo);
+	    if (putc(0, fpo) == EOF)
+	      die(3);
 	}
 
       if (n2 >= 0 && n1 >= 0)
 	{
-	  putc((n2 << 4) | n1, fpo);
+	  if (putc((n2 << 4) | n1, fpo) == EOF)
+	    die(3);
 	  have_off++;
 	  want_off++;
 	  n1 = -1;
@@ -344,6 +360,8 @@ long base_off;
 	      want_off = 0;
 	      while ((c = getc(fpi)) != '\n' && c != EOF)
 		;
+	      if (c == EOF && ferror(fpi))
+		die(2);
 	      ign_garb = 1;
 	    }
 	}
@@ -354,15 +372,20 @@ long base_off;
 	    want_off = 0;
 	  while ((c = getc(fpi)) != '\n' && c != EOF)
 	    ;
+	  if (c == EOF && ferror(fpi))
+	    die(2);
 	  ign_garb = 1;
 	}
     }
-  fflush(fpo);
+  if (fflush(fpo) != 0)
+    die(3);
 #ifdef TRY_SEEK
   fseek(fpo, 0L, 2);
 #endif
-  fclose(fpo);
-  fclose(fpi);
+  if (fclose(fpo) != 0)
+    die(3);
+  if (fclose(fpi) != 0)
+    die(2);
   return 0;
 }
 
@@ -378,11 +401,11 @@ long base_off;
  *
  * If nz is always positive, lines are never suppressed.
  */
-static void
+  static void
 xxdline(fp, l, nz)
-FILE *fp;
-char *l;
-int nz;
+  FILE *fp;
+  char *l;
+  int nz;
 {
   static char z[LLEN+1];
   static int zero_seen = 0;
@@ -397,12 +420,15 @@ int nz;
 	  if (nz < 0)
 	    zero_seen--;
 	  if (zero_seen == 2)
-	    fputs(z, fp);
+	    if (fputs(z, fp) == EOF)
+	      die(3);
 	  if (zero_seen > 2)
-	    fputs("*\n", fp);
+	    if (fputs("*\n", fp) == EOF)
+	      die(3);
 	}
       if (nz >= 0 || zero_seen > 0)
-	fputs(l, fp);
+	if (fputs(l, fp) == EOF)
+	  die(3);
       if (nz)
 	zero_seen = 0;
     }
@@ -438,10 +464,10 @@ static unsigned char etoa64[] =
     0070,0071,0372,0373,0374,0375,0376,0377
 };
 
-int
+  int
 main(argc, argv)
-int argc;
-char *argv[];
+  int argc;
+  char *argv[];
 {
   FILE *fp, *fpo;
   int c, e, p = 0, relseek = 1, negseek = 0, revert = 0;
@@ -450,8 +476,8 @@ char *argv[];
   int octspergrp = -1;	/* number of octets grouped in output */
   int grplen;		/* total chars per octet group */
   long length = -1, n = 0, seekoff = 0;
-  char l[LLEN+1];
-  char *pname, *pp;
+  static char l[LLEN+1];  /* static because it may be too big for stack */
+  char *pp;
 
 #ifdef AMIGA
   /* This program doesn't work when started from the Workbench */
@@ -494,7 +520,7 @@ char *argv[];
 	  else
 	    {
 	      if (!argv[2])
-		exit_with_usage(pname);
+		exit_with_usage();
 	      cols = (int)strtol(argv[2], NULL, 0);
 	      argv++;
 	      argc--;
@@ -507,7 +533,7 @@ char *argv[];
 	  else
 	    {
 	      if (!argv[2])
-		exit_with_usage(pname);
+		exit_with_usage();
 	      octspergrp = (int)strtol(argv[2], NULL, 0);
 	      argv++;
 	      argc--;
@@ -530,7 +556,7 @@ char *argv[];
 	  else
 	    {
 	      if (!argv[2])
-		exit_with_usage(pname);
+		exit_with_usage();
 #ifdef TRY_SEEK
 	      if (argv[2][0] == '+')
 		relseek++;
@@ -549,7 +575,7 @@ char *argv[];
 	  else
 	    {
 	      if (!argv[2])
-		exit_with_usage(pname);
+		exit_with_usage();
 	      length = strtol(argv[2], (char **)NULL, 0);
 	      argv++;
 	      argc--;
@@ -562,7 +588,7 @@ char *argv[];
 	  break;
 	}
       else if (pp[0] == '-' && pp[1])	/* unknown option */
-	exit_with_usage(pname);
+	exit_with_usage();
       else
 	break;				/* not an option */
 
@@ -601,7 +627,7 @@ char *argv[];
     octspergrp = cols;
 
   if (argc > 3)
-    exit_with_usage(pname);
+    exit_with_usage();
 
   if (argc == 1 || (argv[1][0] == '-' && !argv[1][1]))
     BIN_ASSIGN(fp = stdin, !revert);
@@ -639,7 +665,7 @@ char *argv[];
 	  fprintf(stderr, "%s: sorry, cannot revert this type of hexdump\n", pname);
 	  return -1;
 	}
-      return huntype(fp, fpo, stderr, pname, cols, hextype,
+      return huntype(fp, fpo, stderr, cols, hextype,
 		negseek ? -seekoff : seekoff);
     }
 
@@ -663,7 +689,18 @@ char *argv[];
 	  long s = seekoff;
 
 	  while (s--)
-	    (void)getc(fp);
+	    if (getc(fp) == EOF)
+	    {
+	      if (ferror(fp))
+		{
+		  die(2);
+		}
+	      else
+		{
+		  fprintf(stderr, "%s: sorry cannot seek.\n", pname);
+		  return 4;
+		}
+	    }
 	}
     }
 
@@ -671,54 +708,76 @@ char *argv[];
     {
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned char %s", isdigit((int)argv[1][0]) ? "__" : "");
+	  if (fprintf(fpo, "unsigned char %s", isdigit((int)argv[1][0]) ? "__" : "") < 0)
+	    die(3);
 	  for (e = 0; (c = argv[1][e]) != 0; e++)
-	    putc(isalnum(c) ? c : '_', fpo);
-	  fputs("[] = {\n", fpo);
+	    if (putc(isalnum(c) ? c : '_', fpo) == EOF)
+	      die(3);
+	  if (fputs("[] = {\n", fpo) == EOF)
+	    die(3);
 	}
 
       p = 0;
+      c = 0;
       while ((length < 0 || p < length) && (c = getc(fp)) != EOF)
 	{
-	  fprintf(fpo, (hexx == hexxa) ? "%s0x%02x" : "%s0X%02X",
-	    (p % cols) ? ", " : ",\n  "+2*!p,  c);
+	  if (fprintf(fpo, (hexx == hexxa) ? "%s0x%02x" : "%s0X%02X",
+		(p % cols) ? ", " : &",\n  "[2*!p],  c) < 0)
+	    die(3);
 	  p++;
 	}
+      if (c == EOF && ferror(fp))
+	die(2);
 
-      if (p)
-	fputs("\n};\n"+3*(fp == stdin), fpo);
+      if (p && fputs("\n", fpo) == EOF)
+	die(3);
+      if (fputs(&"};\n"[3 * (fp == stdin)], fpo) == EOF)
+	die(3);
 
       if (fp != stdin)
 	{
-	  fprintf(fpo, "unsigned int %s", isdigit((int)argv[1][0]) ? "__" : "");
+	  if (fprintf(fpo, "unsigned int %s", isdigit((int)argv[1][0]) ? "__" : "") < 0)
+	    die(3);
 	  for (e = 0; (c = argv[1][e]) != 0; e++)
-	    putc(isalnum(c) ? c : '_', fpo);
-	  fprintf(fpo, "_len = %d;\n", p);
+	    if (putc(isalnum(c) ? c : '_', fpo) == EOF)
+	      die(3);
+	  if (fprintf(fpo, "_len = %d;\n", p) < 0)
+	    die(3);
 	}
 
-      fclose(fp);
-      fclose(fpo);
+      if (fclose(fp))
+	die(2);
+      if (fclose(fpo))
+	die(3);
       return 0;
     }
 
   if (hextype == HEX_POSTSCRIPT)
     {
       p = cols;
+      e = 0;
       while ((length < 0 || n < length) && (e = getc(fp)) != EOF)
 	{
-	  putchar(hexx[(e >> 4) & 0xf]);
-	  putchar(hexx[(e     ) & 0xf]);
+	  if (putc(hexx[(e >> 4) & 0xf], fpo) == EOF
+		  || putc(hexx[e & 0xf], fpo) == EOF)
+	    die(3);
 	  n++;
 	  if (!--p)
 	    {
-	      putchar('\n');
+	      if (putc('\n', fpo) == EOF)
+		die(3);
 	      p = cols;
 	    }
 	}
+      if (e == EOF && ferror(fp))
+	die(2);
       if (p < cols)
-	putchar('\n');
-      fclose(fp);
-      fclose(fpo);
+	if (putc('\n', fpo) == EOF)
+	  die(3);
+      if (fclose(fp))
+	die(2);
+      if (fclose(fpo))
+	die(3);
       return 0;
     }
 
@@ -729,6 +788,7 @@ char *argv[];
   else	/* hextype == HEX_BITS */
     grplen = 8 * octspergrp + 1;
 
+  e = 0;
   while ((length < 0 || n < length) && (e = getc(fp)) != EOF)
     {
       if (p == 0)
@@ -770,6 +830,8 @@ char *argv[];
 	  p = 0;
 	}
     }
+  if (e == EOF && ferror(fp))
+    die(2);
   if (p)
     {
       l[c = (11 + (grplen * cols - 1)/octspergrp + p)] = '\n'; l[++c] = '\0';
@@ -778,7 +840,11 @@ char *argv[];
   else if (autoskip)
     xxdline(fpo, l, -1);	/* last chance to flush out suppressed lines */
 
-  fclose(fp);
-  fclose(fpo);
+  if (fclose(fp))
+    die(2);
+  if (fclose(fpo))
+    die(3);
   return 0;
 }
+
+/* vi:set ts=8 sw=4 sts=2 cino+={2 cino+=n-2 : */

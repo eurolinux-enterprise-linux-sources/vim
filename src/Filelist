@@ -7,6 +7,7 @@ SRC_ALL =	\
 		src/arabic.c \
 		src/arabic.h \
 		src/ascii.h \
+		src/blowfish.c \
 		src/buffer.c \
 		src/charset.c \
 		src/diff.c \
@@ -38,6 +39,7 @@ SRC_ALL =	\
 		src/mark.c \
 		src/mbyte.c \
 		src/memfile.c \
+		src/memfile_test.c \
 		src/memline.c \
 		src/menu.c \
 		src/message.c \
@@ -55,9 +57,11 @@ SRC_ALL =	\
 		src/popupmnu.c \
 		src/quickfix.c \
 		src/regexp.c \
+		src/regexp_nfa.c \
 		src/regexp.h \
 		src/screen.c \
 		src/search.c \
+		src/sha256.c \
 		src/structs.h \
 		src/spell.c \
 		src/syntax.c \
@@ -70,6 +74,7 @@ SRC_ALL =	\
 		src/version.c \
 		src/version.h \
 		src/vim.h \
+		src/winclip.c \
 		src/window.c \
 		src/xxd/xxd.c \
 		src/main.aap \
@@ -78,7 +83,18 @@ SRC_ALL =	\
 		src/testdir/test[0-9]*.ok \
 		src/testdir/test49.vim \
 		src/testdir/test60.vim \
+		src/testdir/test83-tags? \
+		src/testdir/python2/*.py \
+		src/testdir/python3/*.py \
+		src/testdir/pythonx/*.py \
+		src/testdir/pythonx/topmodule/__init__.py \
+		src/testdir/pythonx/topmodule/submodule/__init__.py \
+		src/testdir/pythonx/topmodule/submodule/subsubmodule/__init__.py \
+		src/testdir/pythonx/topmodule/submodule/subsubmodule/subsubsubmodule.py \
+		src/testdir/python_after/*.py \
+		src/testdir/python_before/*.py \
 		src/proto.h \
+		src/proto/blowfish.pro \
 		src/proto/buffer.pro \
 		src/proto/charset.pro \
 		src/proto/diff.pro \
@@ -116,6 +132,7 @@ SRC_ALL =	\
 		src/proto/regexp.pro \
 		src/proto/screen.pro \
 		src/proto/search.pro \
+		src/proto/sha256.pro \
 		src/proto/spell.pro \
 		src/proto/syntax.pro \
 		src/proto/tag.pro \
@@ -124,6 +141,7 @@ SRC_ALL =	\
 		src/proto/ui.pro \
 		src/proto/undo.pro \
 		src/proto/version.pro \
+		src/proto/winclip.pro \
 		src/proto/window.pro \
 
 
@@ -206,19 +224,24 @@ SRC_UNIX =	\
 SRC_DOS_UNIX =	\
 		src/if_cscope.c \
 		src/if_cscope.h \
+		src/if_lua.c \
 		src/if_mzsch.c \
 		src/if_mzsch.h \
 		src/if_perl.xs \
 		src/if_perlsfio.c \
 		src/if_python.c \
+		src/if_python3.c \
+		src/if_py_both.h \
 		src/if_ruby.c \
 		src/if_sniff.h \
 		src/if_tcl.c \
 		src/proto/if_cscope.pro \
+		src/proto/if_lua.pro \
 		src/proto/if_mzsch.pro \
 		src/proto/if_perl.pro \
 		src/proto/if_perlsfio.pro \
 		src/proto/if_python.pro \
+		src/proto/if_python3.pro \
 		src/proto/if_ruby.pro \
 		src/proto/if_tcl.pro \
 		src/typemap \
@@ -250,8 +273,10 @@ SRC_DOS =	\
 		src/Make_mvc.mak \
 		src/Make_w16.mak \
 		src/bigvim.bat \
+		src/bigvim64.bat \
 		src/msvcsetup.bat \
 		src/msvc2008.bat \
+		src/msvc2010.bat \
 		src/dimm.idl \
 		src/dlldata.c \
 		src/dosinst.c \
@@ -285,6 +310,7 @@ SRC_DOS =	\
 		src/proto/os_win32.pro \
 		src/proto/os_mswin.pro \
 		src/testdir/Make_dos.mak \
+		src/testdir/Make_ming.mak \
 		src/testdir/dos.vim \
 		src/uninstal.c \
 		src/vim.def \
@@ -301,6 +327,7 @@ SRC_DOS =	\
 		src/xxd/Make_bc5.mak \
 		src/xxd/Make_cyg.mak \
 		src/xxd/Make_djg.mak \
+		src/xxd/Make_ming.mak \
 		src/xxd/Make_mvc.mak \
 		nsis/gvim.nsi \
 		nsis/README.txt \
@@ -335,6 +362,13 @@ SRC_DOS_BIN =	\
 		src/vim*.ico \
 		src/vim.tlb \
 		src/vimtbar.lib \
+		src/xpm/COPYRIGHT \
+		src/xpm/README.txt \
+		src/xpm/include/*.h \
+		src/xpm/x64/lib/libXpm.a \
+		src/xpm/x64/lib/libXpm.lib \
+		src/xpm/x86/lib/libXpm.a \
+		src/xpm/x86/lib/libXpm.lib \
 		src/vimtbar.dll \
 		nsis/icons/*.bmp \
 		nsis/icons/*.ico \
@@ -368,7 +402,7 @@ SRC_MAC =	\
 		src/os_mac.h \
 		src/os_mac.rsr.hqx \
 		src/os_mac_conv.c \
-		src/os_macosx.c \
+		src/os_macosx.m \
 		src/proto/gui_mac.pro \
 		src/proto/os_mac_conv.pro \
 
@@ -416,20 +450,14 @@ SRC_EXTRA =	\
 		$(SRC_VMS) \
 		README_os390.txt \
 		src/Make_mint.mak \
-		src/Make_ro.mak \
-		src/gui_riscos.c \
-		src/gui_riscos.h \
 		src/if_sniff.c \
 		src/infplist.xml \
 		src/link.390 \
 		src/os_beos.c \
 		src/os_beos.h \
 		src/os_beos.rsrc \
+		src/proto/os_beos.pro \
 		src/os_mint.h \
-		src/os_riscos.c \
-		src/os_riscos.h \
-		src/proto/gui_riscos.pro \
-		src/proto/os_riscos.pro \
 		src/os_vms_fix.com \
 		src/toolbar.phi \
 
@@ -456,6 +484,7 @@ RT_ALL =	\
 		runtime/macros/hanoi/hanoi.vim \
 		runtime/macros/hanoi/poster \
 		runtime/macros/justify.vim \
+		runtime/macros/less.bat \
 		runtime/macros/less.sh \
 		runtime/macros/less.vim \
 		runtime/macros/life/click.me \
@@ -653,17 +682,19 @@ EXTRA =		\
 		farsi/fonts/*/far-* \
 		runtime/vimlogo.xpm \
 		src/swis.s \
-		src/tee/Makefile* \
+		src/tee/Makefile \
 		src/tee/tee.c \
 		csdpmi4b.zip \
 
 # generic language files
 LANG_GEN = \
-		README_lang.txt \
+		runtime/doc/*-de.1 \
+		runtime/doc/*-de.UTF-8.1 \
 		runtime/doc/*-fr.1 \
 		runtime/doc/*-fr.UTF-8.1 \
 		runtime/doc/*-it.1 \
 		runtime/doc/*-it.UTF-8.1 \
+		runtime/doc/*-ja.UTF-8.1 \
 		runtime/doc/*-pl.1 \
 		runtime/doc/*-pl.UTF-8.1 \
 		runtime/doc/*-ru.1 \
@@ -676,15 +707,28 @@ LANG_GEN = \
 		runtime/tutor/Makefile \
 		runtime/tutor/tutor.utf-8 \
 		runtime/tutor/tutor.?? \
-		runtime/tutor/tutor.??.* \
+		runtime/tutor/tutor.??.utf-8 \
+		runtime/tutor/tutor.??.euc \
+		runtime/tutor/tutor.??.sjis \
+		runtime/tutor/tutor.??.iso9 \
+		runtime/tutor/tutor.??.big5 \
+		runtime/tutor/tutor.??.cp1250 \
+		runtime/tutor/tutor.??.cp1251 \
+		runtime/tutor/tutor.??.cp737 \
+		runtime/tutor/tutor.??_??.utf-8 \
+		runtime/tutor/tutor.bar \
+		runtime/tutor/tutor.bar.utf-8 \
 		runtime/spell/README.txt \
 		runtime/spell/??/*.diff \
 		runtime/spell/??/main.aap \
+		runtime/spell/tet/*.diff \
+		runtime/spell/tet/main.aap \
+		runtime/spell/check/main.aap \
+		runtime/spell/check/*.aff \
+		runtime/spell/check/*.dic \
 		runtime/spell/yi/README.txt \
 		runtime/spell/main.aap \
-		runtime/spell/cleanadd.vim \
 		runtime/spell/*.vim \
-		runtime/spell/fixdup \
 
 # generic language files, binary
 LANG_GEN_BIN = \

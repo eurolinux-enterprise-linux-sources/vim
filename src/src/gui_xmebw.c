@@ -143,10 +143,10 @@ static XtResource resources[] =
 XmPrimitiveClassExtRec xmEnhancedButtonPrimClassExtRec =
 {
     /* next_extension      */ NULL,
-    /* record_type         */ NULLQUARK,
-    /* version             */ XmPrimitiveClassExtVersion,
-    /* record_size         */ sizeof(XmPrimitiveClassExtRec),
-    /* widget_baseline     */ XmInheritBaselineProc,
+    /* record_type	   */ NULLQUARK,
+    /* version		   */ XmPrimitiveClassExtVersion,
+    /* record_size	   */ sizeof(XmPrimitiveClassExtRec),
+    /* widget_baseline	   */ XmInheritBaselineProc,
     /* widget_display_rect */ XmInheritDisplayRectProc,
     /* widget_margins      */ NULL
 };
@@ -235,13 +235,12 @@ bump_color(unsigned short value)
     return tmp;
 }
 
-/*ARGSUSED*/
     static int
 alloc_color(Display	*display,
 	Colormap	colormap,
 	char		*colorname,
 	XColor		*xcolor,
-	void		*closure)
+	void		*closure UNUSED)
 {
     int status;
 
@@ -346,7 +345,7 @@ set_pixmap(XmEnhancedButtonWidget eb)
 	    &eb->primitive.top_shadow_color,
 	    &eb->primitive.highlight_color);
 
-    /* Setup color subsititution table. */
+    /* Setup color substitution table. */
     color[0].pixel = eb->core.background_pixel;
     color[1].pixel = eb->core.background_pixel;
     color[2].pixel = eb->core.background_pixel;
@@ -376,11 +375,8 @@ set_pixmap(XmEnhancedButtonWidget eb)
 
     XGetGeometry(dpy, pix, &root, &x, &y, &width, &height, &border, &depth);
 
-    if (eb->enhancedbutton.label_location == (int)XmTOP
-	    || eb->enhancedbutton.label_location == (int)XmBOTTOM)
-	shift = eb->primitive.shadow_thickness / 2;
-    else
-	shift = eb->primitive.shadow_thickness / 2;
+    /* TODO: does the shift depend on label_location somehow? */
+    shift = eb->primitive.shadow_thickness / 2;
 
     if (shift < 1)
 	shift = 1;
@@ -595,9 +591,10 @@ draw_unhighlight(XmEnhancedButtonWidget eb)
 		       XtHeight(eb), eb->primitive.highlight_thickness);
 }
 
-/*ARGSUSED*/
     static void
-draw_pixmap(XmEnhancedButtonWidget eb, XEvent *event, Region region)
+draw_pixmap(XmEnhancedButtonWidget eb,
+	    XEvent *event UNUSED,
+	    Region region UNUSED)
 {
     Pixmap	pix;
     GC		gc = eb->label.normal_GC;
@@ -641,7 +638,7 @@ draw_pixmap(XmEnhancedButtonWidget eb, XEvent *event, Region region)
     height = eb->core.height - 2 * y;
     if (h < height)
 	height = h;
-    if (depth == eb->core.depth)
+    if (depth == (int)eb->core.depth)
 	XCopyArea(XtDisplay(eb), pix, XtWindow(eb), gc, 0, 0,
 		width, height, x, y);
     else if (depth == 1)
@@ -731,9 +728,11 @@ draw_label(XmEnhancedButtonWidget eb, XEvent *event, Region region)
 	eb->label.normal_GC = tmp_gc;
 }
 
-/*ARGSUSED*/
     static void
-Enter(Widget wid, XEvent *event, String *params, Cardinal *num_params)
+Enter(Widget wid,
+      XEvent *event,
+      String *params UNUSED,
+      Cardinal *num_params UNUSED)
 {
     XmEnhancedButtonWidget eb = (XmEnhancedButtonWidget) wid;
     XmPushButtonCallbackStruct call_value;
@@ -818,9 +817,11 @@ Enter(Widget wid, XEvent *event, String *params, Cardinal *num_params)
     }
 }
 
-/*ARGSUSED*/
     static void
-Leave(Widget wid, XEvent *event, String *params, Cardinal *num_params)
+Leave(Widget wid,
+      XEvent *event,
+      String *params UNUSED,
+      Cardinal *num_params UNUSED)
 {
     XmEnhancedButtonWidget eb = (XmEnhancedButtonWidget)wid;
     XmPushButtonCallbackStruct call_value;
@@ -918,8 +919,8 @@ set_size(XmEnhancedButtonWidget newtb)
     }
 
     /*
-     * Plase note that we manipulate the width only in case of push buttons not
-     * used in the context of a menu pane.
+     * Please note that we manipulate the width only in case of push buttons
+     * not used in the context of a menu pane.
      */
     if (Lab_IsMenupane(newtb))
     {
@@ -976,9 +977,8 @@ set_size(XmEnhancedButtonWidget newtb)
     }
 }
 
-/*ARGSUSED*/
     static void
-Initialize(Widget rq, Widget ebw, ArgList args, Cardinal *n)
+Initialize(Widget rq, Widget ebw, ArgList args UNUSED, Cardinal *n UNUSED)
 {
     XmEnhancedButtonWidget  request = (XmEnhancedButtonWidget)rq;
     XmEnhancedButtonWidget  eb = (XmEnhancedButtonWidget)ebw;
@@ -1006,7 +1006,7 @@ Initialize(Widget rq, Widget ebw, ArgList args, Cardinal *n)
 	XmString str;
 	set_pixmap(eb);
 
-	/* FIXME: this is not the perfect way to deal with menues, which do not
+	/* FIXME: this is not the perfect way to deal with menus, which do not
 	 * have any string set right now.  */
 	str = XmStringCreateLocalized("");
 	XtVaSetValues((Widget) eb, XmNlabelString, str, NULL);
@@ -1056,9 +1056,12 @@ Destroy(Widget w)
     free_pixmaps((XmEnhancedButtonWidget)w);
 }
 
-/*ARGSUSED*/
     static Boolean
-SetValues(Widget current, Widget request, Widget new, ArgList args, Cardinal *n)
+SetValues(Widget current,
+	  Widget request UNUSED,
+	  Widget new,
+	  ArgList args UNUSED,
+	  Cardinal *n UNUSED)
 {
     XmEnhancedButtonWidget  cur = (XmEnhancedButtonWidget) current;
     XmEnhancedButtonWidget  eb = (XmEnhancedButtonWidget) new;
@@ -1108,7 +1111,7 @@ SetValues(Widget current, Widget request, Widget new, ArgList args, Cardinal *n)
 		if ((win_x < 0) || (win_y < 0))
 		    return False;
 
-		if ((win_x > r_width) || (win_y > r_height))
+		if ((win_x > (int)r_width) || (win_y > (int)r_height))
 		    return False;
 		draw_highlight(eb);
 		draw_shadows(eb);
@@ -1256,7 +1259,7 @@ Redisplay(Widget w, XEvent *event, Region region)
     }
     else
     {
-	int adjust = 0;
+	adjust = 0;
 
 #if !defined(LESSTIF_VERSION) && (XmVersion > 1002)
 	/*
@@ -1268,12 +1271,11 @@ Redisplay(Widget w, XEvent *event, Region region)
 	{
 	    case XmEXTERNAL_HIGHLIGHT:
 		adjust = (eb->primitive.highlight_thickness -
-			(eb->pushbutton.default_button_shadow_thickness ?
-			 Xm3D_ENHANCE_PIXEL : 0));
+			 (eb->pushbutton.default_button_shadow_thickness
+			  ?  Xm3D_ENHANCE_PIXEL : 0));
 		break;
 
 	    case XmINTERNAL_HIGHLIGHT:
-		adjust = 0;
 		break;
 
 	    default:

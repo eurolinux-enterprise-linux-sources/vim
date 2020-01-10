@@ -44,7 +44,7 @@ static char_u	*get_end_emsg __ARGS((struct condstack *cstack));
  * executed.  Otherwise, errors and/or interrupts are converted into catchable
  * exceptions (did_throw additionally set), which terminate the script only if
  * not caught.  For user exceptions, only did_throw is set.  (Note: got_int can
- * be set asyncronously afterwards by a SIGINT, so did_throw && got_int is not
+ * be set asynchronously afterwards by a SIGINT, so did_throw && got_int is not
  * a reliant test that the exception currently being thrown is an interrupt
  * exception.  Similarly, did_emsg can be set afterwards on an error in an
  * (unskipped) conditional command inside an inactive conditional, so did_throw
@@ -60,7 +60,9 @@ static char_u	*get_end_emsg __ARGS((struct condstack *cstack));
 #else
 /* Values used for the Vim release. */
 # define THROW_ON_ERROR		TRUE
+# define THROW_ON_ERROR_TRUE
 # define THROW_ON_INTERRUPT	TRUE
+# define THROW_ON_INTERRUPT_TRUE
 #endif
 
 static void	catch_exception __ARGS((except_T *excp));
@@ -1320,16 +1322,20 @@ do_throw(cstack)
      * and reset the did_emsg or got_int flag, so this won't happen again at
      * the next surrounding try conditional.
      */
+#ifndef THROW_ON_ERROR_TRUE
     if (did_emsg && !THROW_ON_ERROR)
     {
 	inactivate_try = TRUE;
 	did_emsg = FALSE;
     }
+#endif
+#ifndef THROW_ON_INTERRUPT_TRUE
     if (got_int && !THROW_ON_INTERRUPT)
     {
 	inactivate_try = TRUE;
 	got_int = FALSE;
     }
+#endif
     idx = cleanup_conditionals(cstack, 0, inactivate_try);
     if (idx >= 0)
     {
@@ -1570,7 +1576,7 @@ ex_catch(eap)
 		    caught = vim_regexec_nl(&regmatch, current_exception->value,
 			    (colnr_T)0);
 		    got_int |= prev_got_int;
-		    vim_free(regmatch.regprog);
+		    vim_regfree(regmatch.regprog);
 		}
 	    }
 	}
@@ -2085,11 +2091,11 @@ leave_cleanup(csp)
  * Values used for "searched_cond" are (CSF_WHILE | CSF_FOR) or CSF_TRY or 0,
  * the latter meaning the innermost try conditional not in its finally clause.
  * "inclusive" tells whether the conditional searched for should be made
- * inactive itself (a try conditional not in its finally claused possibly find
+ * inactive itself (a try conditional not in its finally clause possibly find
  * before is always made inactive).  If "inclusive" is TRUE and
  * "searched_cond" is CSF_TRY|CSF_SILENT, the saved former value of
  * "emsg_silent", if reset when the try conditional finally reached was
- * entered, is restored (unsed by ex_endtry()).  This is normally done only
+ * entered, is restored (used by ex_endtry()).  This is normally done only
  * when such a try conditional is left.
  */
     int
@@ -2254,10 +2260,9 @@ rewind_conditionals(cstack, idx, cond_type, cond_level)
 /*
  * ":endfunction" when not after a ":function"
  */
-/*ARGSUSED*/
     void
 ex_endfunction(eap)
-    exarg_T	*eap;
+    exarg_T	*eap UNUSED;
 {
     EMSG(_("E193: :endfunction not inside a function"));
 }

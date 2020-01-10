@@ -1,415 +1,430 @@
-* Fri Jul 04 2008 Karsten Hopp <karsten@redhat.com> 7.1.330-2
-- new rpm doesn't like zero filled, 3 digit patch numbers
+* Tue Aug 28 2012 Karsten Hopp <karsten@redhat.com> 7.3.638-1
+- patchlevel 638
 
-* Fri Jul 04 2008 Karsten Hopp <karsten@redhat.com> 7.1.330-1
-- patchlevel 330
+* Mon Aug 06 2012 Karsten Hopp <karsten@redhat.com> 2:7.3.622-2
+- add epoch to spec.vim and automatic changelog entries
 
-* Wed Jun 04 2008 Karsten Hopp <karsten@redhat.com> 7.1.309-1
-- Patchlevel 309
+* Mon Aug 06 2012 Karsten Hopp <karsten@redhat.com> 7.3.622-1
+- patchlevel 622
 
-* Wed Jun 04 2008 Karsten Hopp <karsten@redhat.com> 7.1.306-1
-- patchlevel 306, fixes some unicode characters
+* Mon Aug 06 2012 Karsten Hopp <karsten@redhat.com> 7.3.604-1
+- drop vim-6.1-rh3.patch, (bz #754801)
 
-* Tue Jun 03 2008 Karsten Hopp <karsten@redhat.com> 7.1.305-1
-- patchlevel 305
-- put /etc/vimrc autocmd's into fedora augroup (similar to #241308)
+* Wed Jul 18 2012 Karsten Hopp <karsten@redhat.com> 7.3.604-1
+- patchlevel 604
 
-* Thu May 15 2008 Karsten Hopp <karsten@redhat.com> 7.1.298-1
-- patchlevel 298
+* Wed Jul 11 2012 Petr Pisar <ppisar@redhat.com> - 2:7.3.594-2
+- Perl 5.16 rebuild
 
-* Fri Apr 11 2008 Karsten Hopp <karsten@redhat.com> 7.1.293-1
-- patchlevel 293
-- update forth syntax file (Benjamin Krill)
+* Tue Jul 10 2012 Karsten Hopp <karsten@redhat.com> 7.3.594-1
+- patchlevel 594
 
-* Wed Apr 02 2008 Karsten Hopp <karsten@redhat.com> 7.1.291-1
-- patchlevel 291, more fixes for leftover /tmp/cscope* files 
+* Tue Jul 10 2012 Karsten Hopp <karsten@redhat.com> 7.3.592-1
+- patchlevel 592
 
-* Tue Mar 18 2008 Tom "spot" Callaway <tcallawa@redhat.com> 7.1.283-2
-- add Requires for versioned perl (libperl.so)
+* Mon Jul 09 2012 Petr Pisar <ppisar@redhat.com> - 2:7.3.584-2
+- Perl 5.16 rebuild
 
-* Mon Mar 17 2008 Karsten Hopp <karsten@redhat.com> 7.1.283-1
-- patchlevel 283, fixes leftover cscope files in /tmp
+* Mon Jul 02 2012 Karsten Hopp <karsten@redhat.com> 7.3.584-1
+- patchlevel 584
 
-* Wed Mar 12 2008 Karsten Hopp <karsten@redhat.com> 7.1.273-1
-- update to patchlevel 273, this fixes #436902
+* Thu Jun 28 2012 Petr Pisar <ppisar@redhat.com> - 2:7.3.556-2
+- Perl 5.16 rebuild
 
-* Tue Mar 11 2008 Karsten Hopp <karsten@redhat.com> 7.1.270-1
-- patchlevel 270
-- don't write swapfile on most common locations for USB-sticks (#436752)
-- add spec file template
+* Mon Jun 18 2012 Karsten Hopp <karsten@redhat.com> 7.3.556-1
+- patchlevel 556
 
-* Mon Mar 10 2008 Tom "spot" Callaway <tcallawa@redhat.com> 7.1.269-2
-- BR: ExtUtils::Embed to find perl headers
+* Mon Jun 11 2012 Petr Pisar <ppisar@redhat.com> - 2:7.3.515-2
+- Perl 5.16 rebuild
 
-* Mon Mar 10 2008 Karsten Hopp <karsten@redhat.com> 7.1.269-1
-- patchlevel 269
-- rebuild with new perl (#436731)
+* Mon May 21 2012 Karsten Hopp <karsten@redhat.com> 7.3.515-1
+- enable highlighting for older log files (#816848)
 
-* Mon Mar 03 2008 Karsten Hopp <karsten@redhat.com> 7.1.266-1
-- patchlevel 266
-- add minimal help page for /bin/vi (#173974)
+* Tue May 08 2012 Karsten Hopp <karsten@redhat.com> 7.3.515-1
+- patchlevel 515
 
-* Mon Feb 25 2008 Karsten Hopp <karsten@redhat.com> 7.1.262-1
-- patchlevel 262
-- add fix for #231124, BOM was ignored
-- enable ruby interpreter (#215207)
-- add filetype for Erlang header files (#417371)
+* Fri Mar 16 2012 Karsten Hopp <karsten@redhat.com> 7.3.471-1
+- patchlevel 471
 
-* Mon Feb 11 2008 Karsten Hopp <karsten@redhat.com> 7.1.245-1
-- patchlevel 245
+* Mon Feb 13 2012 Karsten Hopp <karsten@redhat.com> 7.3.444-1
+- patchlevel 444
 
-* Sun Jan 27 2008 Karsten Hopp <karsten@redhat.com> 7.1.242-1
-- patchlevel 242
+* Tue Feb 07 2012 Karsten Hopp <karsten@redhat.com> 7.3.434-1
+- patchlevel 434
 
-* Fri Jan 18 2008 Karsten Hopp <karsten@redhat.com> 7.1.233-2
-- silence taglist plugin (#429200)
+* Tue Feb 07 2012 Karsten Hopp <karsten@redhat.com> 7.3.393-3
+- update spec file template, bugzilla 736774
 
-* Fri Jan 18 2008 Karsten Hopp <karsten@redhat.com> 7.1.233-1
-- patchlevel 233
-- fix ada patch
+* Thu Jan 26 2012 Harald Hoyer <harald@redhat.com> 7.3.393-3
+- rebuild against the new ruby library
 
-* Wed Jan 16 2008 Karsten Hopp <karsten@redhat.com> 7.1.230-2
-- add newer ada runtime files to fix bugzilla #246378
+* Thu Jan 26 2012 Harald Hoyer <harald@redhat.com> 7.3.393-2
+- install everything in /usr
+  https://fedoraproject.org/wiki/Features/UsrMove
 
-* Wed Jan 16 2008 Karsten Hopp <karsten@redhat.com> 7.1.230-1
-- patchlevel 230, fixes memory leak
+* Thu Jan 05 2012 Karsten Hopp <karsten@redhat.com> 7.3.393-1
+- patchlevel 393
+- fix boolean key 'Terminal' in gvim.desktop
 
-* Mon Jan 14 2008 Karsten Hopp <karsten@redhat.com> 7.1.228-1
-- patchlevel 228
-- allow overwriting WITH_SELING at build time (#427710)
+* Fri Dec 23 2011 Karsten Hopp <karsten@redhat.com> 7.3.386-1
+- patchlevel 386
 
-* Thu Jan 10 2008 Karsten Hopp <karsten@redhat.com> 7.1.214-1
-- patchlevel 214
+* Mon Sep 26 2011 Karsten Hopp <karsten@redhat.com> 7.3.322-1
+- patchlevel 322
 
-* Mon Jan 07 2008 Karsten Hopp <karsten@redhat.com> 7.1.211-1
-- patchlevel 211
+* Wed Sep 21 2011 Karsten Hopp <karsten@redhat.com> 7.3.315-1
+- patchlevel 315
 
-* Sat Dec 22 2007 Karsten Hopp <karsten@redhat.com> 7.1.175-1
-- patchlevel 175
+* Mon Aug 29 2011 Karsten Hopp <karsten@redhat.com> 7.3.289-1
+- patchlevel 289
 
-* Thu Nov 22 2007 Karsten Hopp <karsten@redhat.com> 7.1.159-1
-- patchlevel 159
-- vim-enhanced requires which for vimtutor (#395371)
+* Mon Aug 29 2011 Karsten Hopp <karsten@redhat.com> 7.3.244-4
+- Remove old patched files. (Ricky Zhou <ricky@fedoraproject.org>)
+  (bugzilla #709456)
 
-* Thu Oct 04 2007 Karsten Hopp <karsten@redhat.com> 7.1.135-1
-- patchlevel 135
+* Thu Jul 21 2011 Petr Sabata <contyk@redhat.com> - 2:7.3.244-3
+- Perl mass rebuild
 
-* Wed Sep 26 2007 Karsten Hopp <karsten@redhat.com> 7.1.122-1
-- patchlevel 122
+* Thu Jul 21 2011 Petr Sabata <contyk@redhat.com> - 2:7.3.244-2
+- Perl mass rebuild
 
-* Tue Sep 25 2007 Karsten Hopp <karsten@redhat.com> 7.1.119-1
-- patchlevel 119
+* Mon Jul 11 2011 Karsten Hopp <karsten@redhat.com> 7.3.244-1
+- patchlevel 244
 
-* Mon Sep 24 2007 Karsten Hopp <karsten@redhat.com> 7.1.116-1
-- patchlevel 116
+* Tue Jun 14 2011 Marcela Mašláňová <mmaslano@redhat.com> - 2:7.3.206-3
+- Perl mass rebuild
 
-* Fri Sep 07 2007 Karsten Hopp <karsten@redhat.com> 7.1.100-1
-- patchlevel 100
+* Tue May 31 2011 Ville Skyttä <ville.skytta@iki.fi> - 2:7.3.206-2
+- Own the /usr/share/vim/vim73 dir.
 
-* Fri Aug 24 2007 Karsten Hopp <karsten@redhat.com> 7.1.87-1
-- add build requirement perl-devel
-- fix tarball unpacking
-- patchlevel 87
+* Mon May 30 2011 Karsten Hopp <karsten@redhat.com> 7.3.206-1
+- drop xxd-locale patch
+- update to patchlevel 206
 
-* Wed Aug 15 2007 Karsten Hopp <karsten@redhat.com> 7.1.77-1
-- patchlevel 77
+* Wed May 11 2011 Karsten Hopp <karsten@redhat.com> 7.3.189-1
+- patchlevel 189
 
-* Mon Aug 13 2007 Karsten Hopp <karsten@redhat.com> 7.1.68-1
-- patchlevel 68
+* Wed Mar 16 2011 Karsten Hopp <karsten@redhat.com> 7.3.138-1
+- patchlevel 138
 
-* Thu Aug 02 2007 Karsten Hopp <karsten@redhat.com> 7.1.47-1
-- patchlevel 47
+* Mon Feb 07 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2:7.3.107-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
-* Wed Jul 11 2007 Karsten Hopp <karsten@redhat.com> 7.1.28-1
-- patchlevel 28
+* Mon Jan 24 2011 Karsten Hopp <karsten@redhat.com> 7.3.107-1
+- patchlevel 107
 
-* Wed Jun 27 2007 Karsten Hopp <karsten@redhat.com> 7.1.12-1
-- Patchlevel 12
+* Mon Jan 10 2011 Karsten Hopp <karsten@redhat.com> 7.3.099-1
+- patchlevel 099
 
-* Mon Jun 04 2007 Karsten Hopp <karsten@redhat.com> 7.1.2-1
-- vim 7.1
-- drop 240 patches
+* Mon Jan 03 2011 Karsten Hopp <karsten@redhat.com> 7.3.094-1
+- patchlevel 094
 
-* Tue May 22 2007 Karsten Hopp <karsten@redhat.com> 7.0.235-1
-- Don't wake up system with blinking gvim cursor:
-  http://www.linuxpowertop.org/known.php
+* Thu Dec 09 2010 Karsten Hopp <karsten@redhat.com> 7.3.081-1
+- patchlevel 081
 
-* Mon Apr 30 2007 Karsten Hopp <karsten@redhat.com> 7.0.235-1
-- update to patchlevel 235, fixes modeline issues 
+* Wed Dec 08 2010 Karsten Hopp <karsten@redhat.com> 7.3.080-1
+- patchlevel 080
 
-* Tue Apr 17 2007 Karsten Hopp <karsten@redhat.com> 7.0.224-3
-- fix typo in require line (vim-X11 - 2:7.0.224-2.fc7.i386 requires 4)
+* Fri Dec 03 2010 Karsten Hopp <karsten@redhat.com> 7.3.075-1
+- patchlevel 075
 
-* Mon Apr 16 2007 Karsten Hopp <karsten@redhat.com> 7.0.224-2
-- use more macros
-- drop BR perl
-- move license to main doc directory
-- set vendor to 'fedora' (desktop-file)
-- don't own man directories
-- preserve timestamps of non-generated files
-- run update-desktop-database
+* Thu Dec 02 2010 Karsten Hopp <karsten@redhat.com> 7.3.073-1
+- patchlevel 073
 
-* Thu Apr 05 2007 Karsten Hopp <karsten@redhat.com> 7.0.224-1
-- vim-X11 provides gvim
+* Thu Nov 25 2010 Karsten Hopp <karsten@redhat.com> 7.3.069-1
+- patchlevel 069
 
-* Fri Mar 30 2007 Karsten Hopp <karsten@redhat.com> 7.0.224-1
-- patchlevel 224
+* Wed Nov 24 2010 Karsten Hopp <karsten@redhat.com> 7.3.068-1
+- patchlevel 068
 
-* Wed Feb 21 2007 Karsten Hopp <karsten@redhat.com> 7.0.195-2
-- rpmlint fixes (#226526)
+* Wed Nov 24 2010 Karsten Hopp <karsten@redhat.com> 7.3.063-1
+- patchlevel 063
 
-* Tue Feb 13 2007 Karsten Hopp <karsten@redhat.com> 7.0.195-1
-- patchlevel 195
+* Wed Nov 17 2010 Karsten Hopp <karsten@redhat.com> 7.3.062-1
+- patchlevel 062
 
-* Mon Feb 12 2007 Karsten Hopp <karsten@redhat.com> 7.0.192-1
-- patchlevel 192
-- test fix for highlighting problems with curly brackets in #define (#203577)
+* Tue Nov 16 2010 Karsten Hopp <karsten@redhat.com> 7.3.061-1
+- patchlevel 061
 
-* Tue Feb 06 2007 Karsten Hopp <karsten@redhat.com> 7.0.191-2
-- uses ncurses instead of ncursesw
+* Tue Nov 16 2010 Karsten Hopp <karsten@redhat.com> 7.3.056-1
+- patchlevel 056
 
-* Tue Feb 06 2007 Karsten Hopp <karsten@redhat.com> 7.0.191-1
-- patchlevel 191
-- clean up spec file for rpmlint
-- drop cvim stuff
+* Thu Nov 11 2010 Karsten Hopp <karsten@redhat.com> 7.3.055-1
+- patchlevel 055
 
-* Tue Jan 23 2007 Karsten Hopp <karsten@redhat.com> 7.0.188-3
-- patchlevel 188
+* Wed Nov 10 2010 Karsten Hopp <karsten@redhat.com> 7.3.051-1
+- patchlevel 051
 
-* Mon Jan 08 2007 Karsten Hopp <karsten@redhat.com> 7.0.178-3
-- enable filetype plugin
+* Thu Nov 04 2010 Karsten Hopp <karsten@redhat.com> 7.3.050-1
+- patchlevel 050
 
-* Thu Dec 14 2006 Karsten Hopp <karsten@redhat.com> 7.0.178-2
-- build vim-minimal with features=small instead of tiny (#219605)
+* Thu Nov 04 2010 Karsten Hopp <karsten@redhat.com> 7.3.048-1
+- patchlevel 048
 
-* Tue Dec 12 2006 Karsten Hopp <karsten@redhat.com> 7.0.178-1
-- add vimfiles/after to list of owned directories
+* Thu Oct 28 2010 Karsten Hopp <karsten@redhat.com> 7.3.047-1
+- patchlevel 047
 
-* Tue Dec 12 2006 Karsten Hopp <karsten@redhat.com> 7.0.178-1
-- patchlevel 178
-- use macros 
-- Resolves: #219154
-  add directory /usr/share/vim/vimfiles for plugins
+* Wed Oct 27 2010 Karsten Hopp <karsten@redhat.com> 7.3.046-1
+- patchlevel 046
 
-* Thu Dec  7 2006 Jeremy Katz <katzj@redhat.com>
-- rebuild for python 2.5
+* Wed Oct 27 2010 Karsten Hopp <karsten@redhat.com> 7.3.039-1
+- patchlevel 039
 
-* Wed Nov 22 2006 Karsten Hopp <karsten@redhat.com> 7.0.168-1
-- patchlevel 168
-- link with ncurses
+* Sun Oct 24 2010 Karsten Hopp <karsten@redhat.com> 7.3.035-1
+- patchlevel 035
 
-* Tue Nov 21 2006 Karsten Hopp <karsten@redhat.com> 7.0.164-2
-- patchlevel 164
+* Sat Oct 23 2010 Karsten Hopp <karsten@redhat.com> 7.3.034-1
+- patchlevel 034
 
-* Mon Nov 13 2006 Karsten Hopp <karsten@redhat.com> 7.0.162-2
-- fix lang problem in spec file mode
-- use old g:packager variable when set
+* Sat Oct 23 2010 Karsten Hopp <karsten@redhat.com> 7.3.033-1
+- patchlevel 033
 
-* Fri Nov 10 2006 Karsten Hopp <karsten@redhat.com> 7.0.162-1
-- patchlevel 162
+* Thu Oct 21 2010 Karsten Hopp <karsten@redhat.com> 7.3.032-1
+- patchlevel 032
 
-* Mon Nov 06 2006 Karsten Hopp <karsten@redhat.com> 7.0.158-1
-- patchlevel 158
+* Wed Oct 20 2010 Karsten Hopp <karsten@redhat.com> 7.3.031-1
+- patchlevel 031
 
-* Tue Oct 17 2006 Karsten Hopp <karsten@redhat.com> 7.0.139-1
-- patchlevel 139
-- provide vim, vi (#210950)
+* Sat Oct 16 2010 Karsten Hopp <karsten@redhat.com> 7.3.029-1
+- patchlevel 029
 
-* Thu Sep 28 2006 Jeremy Katz <katzj@redhat.com> - 7.0.109-3
-- disable vim-spell subpackage as it pushes us over CD boundaries
+* Fri Oct 15 2010 Karsten Hopp <karsten@redhat.com> 7.3.028-1
+- patchlevel 028
 
-* Tue Sep 28 2006 Karsten Hopp <karsten@redhat.com> 7.0.109-2
-- fix typo in vimspell.sh (#203178)
+* Thu Oct 14 2010 Karsten Hopp <karsten@redhat.com> 7.3.027-1
+- patchlevel 027
 
-* Tue Sep 19 2006 Karsten Hopp <karsten@redhat.com> 7.0.109-1
-- update to patchlevel 109 to fix some redraw problems
-- fix invisible comments in diff mode (#204042)
+* Wed Oct 13 2010 Karsten Hopp <karsten@redhat.com> 7.3.026-1
+- patchlevel 026
 
-* Tue Sep 12 2006 Karsten Hopp <karsten@redhat.com> 7.0.100-1
-- Patchlevel 100
-- replace runtime files with newer ones
+* Sun Oct 10 2010 Karsten Hopp <karsten@redhat.com> 7.3.021-1
+- patchlevel 021
 
-* Mon Sep 11 2006 Karsten Hopp <karsten@redhat.de> 7.0.099-1
-- Patchlevel 99
+* Sat Oct 09 2010 Karsten Hopp <karsten@redhat.com> 7.3.020-1
+- patchlevel 020
 
-* Mon Sep 05 2006 Karsten Hopp <karsten@redhat.de> 7.0.086-1
-- Patchlevel 86
+* Fri Oct 01 2010 Karsten Hopp <karsten@redhat.com> 7.3.019-1
+- patchlevel 019
 
-* Mon Sep 04 2006 Karsten Hopp <karsten@redhat.de> 7.0.083-1
-- Patchlevel 83
+* Thu Sep 30 2010 Karsten Hopp <karsten@redhat.com> 7.3.018-1
+- patchlevel 018
 
-* Wed Aug 30 2006 Karsten Hopp <karsten@redhat.de> 7.0.076-1
-- Patchlevel 76
+* Thu Sep 30 2010 Karsten Hopp <karsten@redhat.com> 7.3.011-3
+- add filesystem subpackage (#628293)
 
-* Thu Aug 25 2006 Karsten Hopp <karsten@redhat.de> 7.0.066-2
-- fix vimdiff colors (#204042)
+* Wed Sep 29 2010 jkeating - 2:7.3.011-2
+- Rebuilt for gcc bug 634757
 
-* Thu Aug 24 2006 Karsten Hopp <karsten@redhat.de> 7.0.066-1
-- fix syntax patch (#203798)
-- patchlevel 66
+* Wed Sep 22 2010 Karsten Hopp <karsten@redhat.com> 7.3.011-1
+- update to VIM 7.3 patchlevel 011
 
-* Wed Aug 17 2006 Karsten Hopp <karsten@redhat.de> 7.0.063-1
-- Patchlevel 63
+# vim:nrformats-=octal
+* Tue Jul 27 2010 Mamoru Tasaka <mtasaka@ioa.s.u-tokyo.ac.jp> 7.2.446-2
+- Rebuild against python 2.7
 
-* Wed Aug 15 2006 Karsten Hopp <karsten@redhat.de> 7.0.053-1
-- Patchlevel 53
-- Buildrequires libXpm-devel
+* Tue Jul 13 2010 Karsten Hopp <karsten@redhat.com> 7.2.446-1
+- patchlevel 446
 
-* Wed Aug 09 2006 Karsten Hopp <karsten@redhat.de> 7.0.050-1
-- Patchlevel 50
+* Thu Jul 08 2010 Karsten Hopp <karsten@redhat.com> 7.2.445-1
+- patchlevel 445
 
-* Thu Aug 03 2006  Karsten Hopp <karsten@redhat.de> 7.0.042-2
-- clean up spec file
+* Wed Jun 23 2010 Karsten Hopp <karsten@redhat.com> 7.2.444-2
+- rebuild with perl-5.12
 
-* Mon Jul 24 2006 Karsten Hopp <karsten@redhat.de> 7.0.042-1
-- patchlevel 42
+* Sun Jun 13 2010 Karsten Hopp <karsten@redhat.com> 7.2.444-1
+- patchlevel 444
 
-* Wed Jul 20 2006 Karsten Hopp <karsten@redhat.de> 7.0.039-1
-- patchlevel 39
-- allow usage of $VIM variable (#199465)
+* Sun Jun 13 2010 Karsten Hopp <karsten@redhat.com> 7.2.443-1
+- patchlevel 443
 
-* Wed Jul 12 2006 Jesse Keating <jkeating@redhat.com> - 2:7.0.035-1.1
-- rebuild
+* Sat Jun 05 2010 Karsten Hopp <karsten@redhat.com> 7.2.442-1
+- patchlevel 442
 
-* Tue Jun 27 2006 Karsten Hopp <karsten@redhat.de> 7.0.035-1
-- patchlevel 35
+* Wed Jun 02 2010 Marcela Maslanova <mmaslano@redhat.com> - 2:7.2.441-2
+- Mass rebuild with perl-5.12.0
 
-* Wed Jun 21 2006 Karsten Hopp <karsten@redhat.de> 7.0.022-2
-- add binfmt_misc rpc_pipefs to fstypes for better mtab highlighting
+* Sun May 30 2010 Karsten Hopp <karsten@redhat.com> 7.2.441-1
+- patchlevel 441
 
-* Tue Jun 20 2006 Karsten Hopp <karsten@redhat.de> 7.0.022-1
+* Sat May 29 2010 Karsten Hopp <karsten@redhat.com> 7.2.440-1
+- patchlevel 440
+
+* Wed May 26 2010 Karsten Hopp <karsten@redhat.com> 7.2.438-1
+- patchlevel 438
+
+* Sat May 22 2010 Karsten Hopp <karsten@redhat.com> 7.2.437-1
+- patchlevel 437
+
+* Sun May 16 2010 Karsten Hopp <karsten@redhat.com> 7.2.436-1
+- patchlevel 436
+
+* Sat May 15 2010 Karsten Hopp <karsten@redhat.com> 7.2.433-1
+- patchlevel 433
+
+* Fri May 14 2010 Karsten Hopp <karsten@redhat.com> 7.2.427-1
+- patchlevel 427
+
+* Thu May 13 2010 Karsten Hopp <karsten@redhat.com> 7.2.422-1
+- patchlevel 422
+
+* Fri May 07 2010 Karsten Hopp <karsten@redhat.com> 7.2.416-1
+- patchlevel 416
+
+* Tue Apr 20 2010 Karsten Hopp <karsten@redhat.com> 7.2.411-2
+- fix rvim manpage (#583180)
+
+* Wed Mar 24 2010 Karsten Hopp <karsten@redhat.com> 7.2.411-1
+- patchlevel 411
+
+* Tue Mar 23 2010 Karsten Hopp <karsten@redhat.com> 7.2.410-1
+- patchlevel 410
+
+* Sat Mar 20 2010 Karsten Hopp <karsten@redhat.com> 7.2.403-1
+- patchlevel 403
+
+* Thu Mar 18 2010 Karsten Hopp <karsten@redhat.com> 7.2.402-1
+- patchlevel 402
+
+* Wed Mar 17 2010 Karsten Hopp <karsten@redhat.com> 7.2.399-1
+- patchlevel 399
+
+* Wed Mar 10 2010 Karsten Hopp <karsten@redhat.com> 7.2.394-1
+- patchlevel 394
+
+* Wed Mar 03 2010 Karsten Hopp <karsten@redhat.com> 7.2.385-1
+- patchlevel 385
+
+* Tue Mar 02 2010 Karsten Hopp <karsten@redhat.com> 7.2.384-1
+- patchlevel 384
+
+* Tue Mar 02 2010 Karsten Hopp <karsten@redhat.com> 7.2.381-1
+- patchlevel 381
+
+* Sat Feb 27 2010 Karsten Hopp <karsten@redhat.com> 7.2.377-1
+- patchlevel 377
+
+* Wed Feb 24 2010 Karsten Hopp <karsten@redhat.com> 7.2.376-1
+- patchlevel 376
+
+* Thu Feb 18 2010 Karsten Hopp <karsten@redhat.com> 7.2.368-1
+- patchlevel 368
+
+* Thu Feb 18 2010 Karsten Hopp <karsten@redhat.com> 7.2.367-1
+- patchlevel 367
+
+* Wed Feb 17 2010 Karsten Hopp <karsten@redhat.com> 7.2.365-1
+- patchlevel 365
+
+* Fri Feb 12 2010 Karsten Hopp <karsten@redhat.com> 7.2.359-1
+- patchlevel 359
+
+* Thu Feb 11 2010 Karsten Hopp <karsten@redhat.com> 7.2.357-1
+- patchlevel 357
+
+* Thu Feb 04 2010 Karsten Hopp <karsten@redhat.com> 7.2.356-1
+- patchlevel 356
+
+* Wed Feb 03 2010 Karsten Hopp <karsten@redhat.com> 7.2.354-1
+- patchlevel 354
+
+* Fri Jan 29 2010 Karsten Hopp <karsten@redhat.com> 7.2.351-1
+- patchlevel 351
+
+* Thu Jan 28 2010 Karsten Hopp <karsten@redhat.com> 7.2.350-1
+- patchlevel 350
+
+* Mon Dec  7 2009 Stepan Kasal <skasal@redhat.com> - 2:7.2.315-2
+- rebuild against perl 5.10.1
+
+* Wed Dec 03 2009 Karsten Hopp <karsten@redhat.com> 7.2.315-1
+- patchlevel 315
+- fix vimrc location in man page (#456992)
+- correct syntax highlighting of httpd config files in /etc/httpd (#499123)
+- Buildrequire ruby, ruby-devel (#503872)
+- Remove check for static gravity (#510307)
+- sort tags file (#517725)
+- use one gvim to open multiple file selections from nautilus (#519265)
+- use elinks -source instead of elinks -dump (#518791)
+- add ext4 keyword to /etc/fstab syntax highlighting (#498290)
+
+* Mon Nov 09 2009 Karsten Hopp <karsten@redhat.com> 7.2.284-1
+- patchlevel 284
+
+* Thu Aug 20 2009 Karsten Hopp <karsten@redhat.com> 7.2.245-3
+- change range of system ids in /etc/profile.d/vim/* (#518555)
+
+* Mon Aug 03 2009 Karsten Hopp <karsten@redhat.com> 7.2.245-2
+- add fix for glibc fortify segfault (#514717, Adam Tkac)
+
+* Sat Aug 01 2009 Karsten Hopp <karsten@redhat.com> 7.2.245-1
+- add 97 upstream patches to get to patchlevel 245
+
+* Sun Jul 26 2009 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 2:7.2.148-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_12_Mass_Rebuild
+
+* Fri Mar 27 2009 Karsten Hopp <karsten@redhat.com> 7.2.148-1
+- patchlevel 148, fixes #461417
+
+* Tue Mar 10 2009 Karsten Hopp <karsten@redhat.com> 7.2.132-1
+- patchlevel 132, fixes accesses to freed memory
+
+* Wed Mar 04 2009 Karsten Hopp <karsten@redhat.com> 7.2.131-1
+- patchlevel 131
+
+* Tue Feb 24 2009 Karsten Hopp <karsten@redhat.com> 7.2.127-1
+- patchlevel 127
+
+* Mon Feb 23 2009 Karsten Hopp <karsten@redhat.com> 7.2.124-1
+- patchlevel 124
+
+* Mon Jan 26 2009 Karsten Hopp <karsten@redhat.com> 7.2.088-1
+- patchlevel 88
+
+* Thu Jan 08 2009 Karsten Hopp <karsten@redhat.com> 7.2.079-2
+- patchlevel 79
+
+* Thu Dec 04 2008 Jesse Keating <jkeating@redhat.com> - 7.2.060-2
+- Rebuild for new python.
+
+* Mon Dec 01 2008 Karsten Hopp <karsten@redhat.com> 7.2.060-1
+- patchlevel 60
+
+* Mon Nov 10 2008 Karsten Hopp <karsten@redhat.com> 7.2.032-1
+- patchlevel 32
+
+* Mon Nov 03 2008 Karsten Hopp <karsten@redhat.com> 7.2.026-2
+- add more /usr/share/vim/vimfiles directories (#444387)
+
+* Mon Nov 03 2008 Karsten Hopp <karsten@redhat.com> 7.2.026-1
+- patchlevel 26
+- own some directories in /usr/share/vim/vimfiles (#469491)
+
+* Tue Oct 21 2008 Karsten Hopp <karsten@redhat.com> 7.2.025-2
+- re-enable clean
+
+* Mon Oct 20 2008 Karsten Hopp <karsten@redhat.com> 7.2.025-1
+- patchlevel 25
+- add Categories tag to desktop file (#226526)
+- add requirement on hicolor-icon-theme to vim-X11 (#226526)
+- drop Amiga info files (#226526)
+- remove non-utf8 man pages (#226526)
+- drop Application from categories (#226526)
+
+* Tue Sep 30 2008 Karsten Hopp <karsten@redhat.com> 7.2.022-1
 - patchlevel 22
 
-* Tue Jun 20 2006 Karsten Hopp <karsten@redhat.de> 7.0.020-1
-- patchlevel 20
+* Mon Sep 08 2008 Karsten Hopp <karsten@redhat.com> 7.2.013-1
+- patchlevel 13
 
-* Tue Jun 20 2006 Karsten Hopp <karsten@redhat.de> 7.0.019-1
-- patchlevel 19
-- buildrequire autoconf
+* Mon Aug 25 2008 Karsten Hopp <karsten@redhat.com> 7.2.006-1
+- patchlevel 6
 
-* Tue May 30 2006 Karsten Hopp <karsten@redhat.de> 7.0.017-1
-- patchlevel 17, although it affects just the Motif version
-- own some directories (#192787)
+* Mon Aug 18 2008 Karsten Hopp <karsten@redhat.com> 7.2.002-1
+- patchlevel 2
+- fix specfile template (#446070)
+- old specfile changelog moved to Changelog.rpm
 
-* Sat May 13 2006 Karsten Hopp <karsten@redhat.de> 7.0.016-1
-- patchlevel 016
-
-* Fri May 12 2006 Karsten Hopp <karsten@redhat.de> 7.0.012-1
-- patchlevel 012
-
-* Thu May 11 2006 Karsten Hopp <karsten@redhat.de> 7.0.010-1
-- patchlevel 010
-
-* Wed May 10 2006 Karsten Hopp <karsten@redhat.de> 7.0.005-2
-- patchlevel 005
-- move older changelogs (<7.0) into a file, no need to keep them 
-  in the rpm database
-
-* Tue May 09 2006 Karsten Hopp <karsten@redhat.de> 7.0.000-2
-- bump epoch, the buildsystem thinks 7.0.000-2 is older than 7.0.g001-1
-  although rpm is quite happy with it.
-
-* Mon May 08 2006 Karsten Hopp <karsten@redhat.de> 7.0.000-1
-- vim-7.0 
-- Spell checking support for about 50 languages
-- Intelligent completion for C, HTML, Ruby, Python, PHP, etc.
-- Tab pages, each containing multiple windows
-- Undo branches: never accidentally lose text again
-- Vim script supports Lists and Dictionaries (similar to Python)
-- Vim script profiling
-- Improved Unicode support
-- Highlighting of cursor line, cursor column and matching braces
-- Translated manual pages support.
-- Internal grep; works on all platforms, searches compressed files
-- Browsing remote directories, zip and tar archives
-- Printing multi-byte text
-- find details about the changes since vim-6.4 with :help version7
-
-- fix SE Linux context of temporary (.swp) files (#189968)
-- /bin/vi /vim-minimal is now using /etc/virc to avoid .rpmnew files
-  when updating
-
-* Tue May 02 2006 Karsten Hopp <karsten@redhat.de> 7.0.g001-1
-- vim-7.0g BETA
-
-* Fri Apr 28 2006 Karsten Hopp <karsten@redhat.de> 7.0.f001-1
-- vim-7.0f3 BETA
-
-* Thu Apr 20 2006 Karsten Hopp <karsten@redhat.de> 7.0.e001-1
-- vim-7.0e BETA
-
-* Tue Apr 11 2006 Karsten Hopp <karsten@redhat.de> 7.0.d001-1
-- vim-7.0d BETA
-
-* Fri Apr 07 2006 Karsten Hopp <karsten@redhat.de> 7.0c.000-3
-- fix vimrc filename
-
-* Thu Apr 06 2006 Karsten Hopp <karsten@redhat.de> 7.0c.000-2
-- new snapshot
-
-* Tue Apr 04 2006 Karsten Hopp <karsten@redhat.de> 7.0c.000-1
-- vim-7.0c BETA
-
-* Wed Mar 22 2006 Karsten Hopp <karsten@redhat.de> 7.0aa.000-3
-- Rawhide build as vim, opposed to vim7 (prerelease)
-- conflict with older man-pages-{it,fr} packages
-- cleanup lang stuff
-
-* Thu Mar 16 2006 Karsten Hopp <karsten@redhat.de> 7.0aa.000-2
-- make it coexist with vim-6 (temporarily)
-- new CVS snapshot
-
-* Tue Mar 14 2006 Karsten Hopp <karsten@redhat.de> 7.0aa.000-1
-- vim7 pre Release
-- older changelogs available in Changelog.rpm
-* Thu Mar 09 2006 Karsten Hopp <karsten@redhat.de> 6.4.007-4
-- fix configure check for python (#184478)
-
-* Thu Mar 09 2006 Karsten Hopp <karsten@redhat.de> 6.4.007-3
-- rebuild
-
-* Mon Feb 20 2006 Karsten Hopp <karsten@redhat.de> 6.4.007-2
-- gtk-update-icon-cache --ignore-theme-index 
-  (avoids %%post failures when hicolor-icon-theme isn't installed)
-
-* Wed Feb 15 2006 Karsten Hopp <karsten@redhat.de> 6.4.007-1
-- fix vim.csh script (#180429)
-- patchlevel 7
-
-* Fri Feb 10 2006 Jesse Keating <jkeating@redhat.com> - 1:6.4.006-1.2
-- bump again for double-long bug on ppc(64)
-
-* Tue Feb 07 2006 Jesse Keating <jkeating@redhat.com> - 1:6.4.006-1.1
-- rebuilt for new gcc4.1 snapshot and glibc changes
-
-* Mon Jan 02 2006 Karsten Hopp <karsten@redhat.de> 6.4.006-1
-- patchlevel 6, fixes bz# 175048
-
-* Tue Dec 20 2005 Karsten Hopp <karsten@redhat.de> 6.4.004-2
-- disable templates when editing new .c / .h files (#175878)
-
-* Fri Dec 09 2005 Jesse Keating <jkeating@redhat.com>
-- rebuilt
-
-* Thu Dec 08 2005 Karsten Hopp <karsten@redhat.de> 6.4.004-1
-- fix fstab syntax file (#174735)
-- patchlevel 4
-
-* Wed Nov 30 2005 Karsten Hopp <karsten@redhat.de> 6.4.003-1
-- patchlevel 3
-- remove withgui switch as we include vim-X11 in all our distributions now 
-  (#174271)
-
-* Fri Nov 25 2005 Karsten Hopp <karsten@redhat.de> 6.4.000-4
-- enable tmpfile patch 
-
-* Thu Oct 27 2005 Karsten Hopp <karsten@redhat.de> 6.4.000-3
-- test build
-
-* Tue Oct 25 2005 Karsten Hopp <karsten@redhat.de> 6.4.000-2
-- use %%{_sysconfdir} (#171556)
-- add syntax highlighting rule for %%check (Ralf Ertzinger, #165277)
-
-* Mon Oct 17 2005 Karsten Hopp <karsten@redhat.de> 6.4.000-1
-- vim-6.4 patchlevel 0
+* Fri Aug 14 2008 Karsten Hopp <karsten@redhat.com> 7.2.000-1
+- vim 7.2
+- drop 330 patches
 

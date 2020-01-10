@@ -442,12 +442,11 @@ prt_get_unit(idx)
 /*
  * Print the page header.
  */
-/*ARGSUSED*/
     static void
 prt_header(psettings, pagenum, lnum)
     prt_settings_T  *psettings;
     int		pagenum;
-    linenr_T	lnum;
+    linenr_T	lnum UNUSED;
 {
     int		width = psettings->chars_per_line;
     int		page_line;
@@ -569,7 +568,7 @@ ex_hardcopy(eap)
     int			page_line;
     int			jobsplit;
 
-    memset(&settings, 0, sizeof(prt_settings_T));
+    vim_memset(&settings, 0, sizeof(prt_settings_T));
     settings.has_color = TRUE;
 
 # ifdef FEAT_POSTSCRIPT
@@ -617,7 +616,7 @@ ex_hardcopy(eap)
 	else
 	    settings.modec = 't';
 
-    if (!syntax_present(curbuf))
+    if (!syntax_present(curwin))
 	settings.do_syntax = FALSE;
     else if (printer_opts[OPT_PRINT_SYNTAX].present
 	    && TOLOWER_ASC(printer_opts[OPT_PRINT_SYNTAX].string[0]) != 'a')
@@ -692,7 +691,7 @@ ex_hardcopy(eap)
 	prt_pos_T	page_prtpos;	/* print position at page start */
 	int		side;
 
-	memset(&page_prtpos, 0, sizeof(prt_pos_T));
+	vim_memset(&page_prtpos, 0, sizeof(prt_pos_T));
 	page_prtpos.file_line = eap->line1;
 	prtpos = page_prtpos;
 
@@ -1760,18 +1759,25 @@ prt_find_resource(name, resource)
     char	*name;
     struct prt_ps_resource_S *resource;
 {
-    char_u	buffer[MAXPATHL + 1];
+    char_u	*buffer;
+    int		retval;
 
-    STRCPY(resource->name, name);
+    buffer = alloc(MAXPATHL + 1);
+    if (buffer == NULL)
+	return FALSE;
+
+    vim_strncpy(resource->name, (char_u *)name, 63);
     /* Look for named resource file in runtimepath */
     STRCPY(buffer, "print");
     add_pathsep(buffer);
-    STRCAT(buffer, name);
-    STRCAT(buffer, ".ps");
+    vim_strcat(buffer, (char_u *)name, MAXPATHL);
+    vim_strcat(buffer, (char_u *)".ps", MAXPATHL);
     resource->filename[0] = NUL;
-    return (do_in_runtimepath(buffer, FALSE, prt_resource_name,
+    retval = (do_in_runtimepath(buffer, FALSE, prt_resource_name,
 							   resource->filename)
 	    && resource->filename[0] != NUL);
+    vim_free(buffer);
+    return retval;
 }
 
 /* PS CR and LF characters have platform independent values */
@@ -1881,7 +1887,7 @@ prt_next_dsc(p_dsc_line)
 	return FALSE;
 
     /* Find type of DSC comment */
-    for (comment = 0; comment < NUM_ELEMENTS(prt_dsc_table); comment++)
+    for (comment = 0; comment < (int)NUM_ELEMENTS(prt_dsc_table); comment++)
 	if (prt_resfile_strncmp(0, prt_dsc_table[comment].string,
 					    prt_dsc_table[comment].len) == 0)
 	    break;
@@ -1944,6 +1950,7 @@ prt_open_resource(resource)
 	fclose(fd_resource);
 	return FALSE;
     }
+    fclose(fd_resource);
 
     prt_resfile.line_end = -1;
     prt_resfile.line_start = 0;
@@ -1957,7 +1964,6 @@ prt_open_resource(resource)
     {
 	EMSG2(_("E618: file \"%s\" is not a PostScript resource file"),
 		resource->filename);
-	fclose(fd_resource);
 	return FALSE;
     }
 
@@ -1975,7 +1981,6 @@ prt_open_resource(resource)
     {
 	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
 		resource->filename);
-	fclose(fd_resource);
 	return FALSE;
     }
     offset += (int)STRLEN(PRT_RESOURCE_RESOURCE);
@@ -1994,7 +1999,6 @@ prt_open_resource(resource)
     {
 	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
 		resource->filename);
-	fclose(fd_resource);
 	return FALSE;
     }
 
@@ -2037,11 +2041,8 @@ prt_open_resource(resource)
     {
 	EMSG2(_("E619: file \"%s\" is not a supported PostScript resource file"),
 		resource->filename);
-	fclose(fd_resource);
 	return FALSE;
     }
-
-    fclose(fd_resource);
 
     return TRUE;
 }
@@ -2185,7 +2186,7 @@ prt_dsc_requirements(duplex, tumble, collate, color, num_copies)
     if (num_copies > 1)
     {
 	prt_write_string(" numcopies(");
-	/* Note: no space wanted so dont use prt_write_int() */
+	/* Note: no space wanted so don't use prt_write_int() */
 	sprintf((char *)prt_line_buffer, "%d", num_copies);
 	prt_write_file(prt_line_buffer);
 	prt_write_string(")");
@@ -2454,12 +2455,11 @@ prt_match_charset(p_charset, p_cmap, pp_mbchar)
 }
 #endif
 
-/*ARGSUSED*/
     int
 mch_print_init(psettings, jobname, forceit)
     prt_settings_T *psettings;
     char_u	*jobname;
-    int		forceit;
+    int		forceit UNUSED;
 {
     int		i;
     char	*paper_name;
@@ -2514,7 +2514,7 @@ mch_print_init(psettings, jobname, forceit)
     if (!(props & ENC_8BIT) && ((*p_pmcs != NUL) || !(props & ENC_UNICODE)))
     {
 	p_mbenc_first = NULL;
-	for (cmap = 0; cmap < NUM_ELEMENTS(prt_ps_mbfonts); cmap++)
+	for (cmap = 0; cmap < (int)NUM_ELEMENTS(prt_ps_mbfonts); cmap++)
 	    if (prt_match_encoding((char *)p_encoding, &prt_ps_mbfonts[cmap],
 								    &p_mbenc))
 	    {
@@ -2642,7 +2642,7 @@ mch_print_init(psettings, jobname, forceit)
 	paper_name = "A4";
 	paper_strlen = 2;
     }
-    for (i = 0; i < PRT_MEDIASIZE_LEN; ++i)
+    for (i = 0; i < (int)PRT_MEDIASIZE_LEN; ++i)
 	if (STRLEN(prt_mediasize[i].name) == (unsigned)paper_strlen
 		&& STRNICMP(prt_mediasize[i].name, paper_name,
 							   paper_strlen) == 0)
@@ -2855,15 +2855,33 @@ mch_print_begin(psettings)
     double      right;
     double      top;
     double      bottom;
-    struct prt_ps_resource_S res_prolog;
-    struct prt_ps_resource_S res_encoding;
+    struct prt_ps_resource_S *res_prolog;
+    struct prt_ps_resource_S *res_encoding;
     char	buffer[256];
     char_u      *p_encoding;
     char_u	*p;
 #ifdef FEAT_MBYTE
-    struct prt_ps_resource_S res_cidfont;
-    struct prt_ps_resource_S res_cmap;
+    struct prt_ps_resource_S *res_cidfont;
+    struct prt_ps_resource_S *res_cmap;
 #endif
+    int		retval = FALSE;
+
+    res_prolog = (struct prt_ps_resource_S *)
+				      alloc(sizeof(struct prt_ps_resource_S));
+    res_encoding = (struct prt_ps_resource_S *)
+				      alloc(sizeof(struct prt_ps_resource_S));
+#ifdef FEAT_MBYTE
+    res_cidfont = (struct prt_ps_resource_S *)
+				      alloc(sizeof(struct prt_ps_resource_S));
+    res_cmap = (struct prt_ps_resource_S *)
+				      alloc(sizeof(struct prt_ps_resource_S));
+#endif
+    if (res_prolog == NULL || res_encoding == NULL
+#ifdef FEAT_MBYTE
+	    || res_cidfont == NULL || res_cmap == NULL
+#endif
+       )
+	goto theend;
 
     /*
      * PS DSC Header comments - no PS code!
@@ -2939,27 +2957,27 @@ mch_print_begin(psettings)
 #endif
 
     /* Search for external resources VIM supplies */
-    if (!prt_find_resource("prolog", &res_prolog))
+    if (!prt_find_resource("prolog", res_prolog))
     {
 	EMSG(_("E456: Can't find PostScript resource file \"prolog.ps\""));
 	return FALSE;
     }
-    if (!prt_open_resource(&res_prolog))
+    if (!prt_open_resource(res_prolog))
 	return FALSE;
-    if (!prt_check_resource(&res_prolog, PRT_PROLOG_VERSION))
+    if (!prt_check_resource(res_prolog, PRT_PROLOG_VERSION))
 	return FALSE;
 #ifdef FEAT_MBYTE
     if (prt_out_mbyte)
     {
 	/* Look for required version of multi-byte printing procset */
-	if (!prt_find_resource("cidfont", &res_cidfont))
+	if (!prt_find_resource("cidfont", res_cidfont))
 	{
 	    EMSG(_("E456: Can't find PostScript resource file \"cidfont.ps\""));
 	    return FALSE;
 	}
-	if (!prt_open_resource(&res_cidfont))
+	if (!prt_open_resource(res_cidfont))
 	    return FALSE;
-	if (!prt_check_resource(&res_cidfont, PRT_CID_PROLOG_VERSION))
+	if (!prt_check_resource(res_cidfont, PRT_CID_PROLOG_VERSION))
 	    return FALSE;
     }
 #endif
@@ -2975,7 +2993,7 @@ mch_print_begin(psettings)
 #endif
 	p_encoding = enc_skip(p_penc);
 	if (*p_encoding == NUL
-		|| !prt_find_resource((char *)p_encoding, &res_encoding))
+		|| !prt_find_resource((char *)p_encoding, res_encoding))
 	{
 	    /* 'printencoding' not set or not supported - find alternate */
 #ifdef FEAT_MBYTE
@@ -2984,13 +3002,13 @@ mch_print_begin(psettings)
 	    p_encoding = enc_skip(p_enc);
 	    props = enc_canon_props(p_encoding);
 	    if (!(props & ENC_8BIT)
-		    || !prt_find_resource((char *)p_encoding, &res_encoding))
+		    || !prt_find_resource((char *)p_encoding, res_encoding))
 		/* 8-bit 'encoding' is not supported */
 #endif
 		{
 		/* Use latin1 as default printing encoding */
 		p_encoding = (char_u *)"latin1";
-		if (!prt_find_resource((char *)p_encoding, &res_encoding))
+		if (!prt_find_resource((char *)p_encoding, res_encoding))
 		{
 		    EMSG2(_("E456: Can't find PostScript resource file \"%s.ps\""),
 			    p_encoding);
@@ -2998,7 +3016,7 @@ mch_print_begin(psettings)
 		}
 	    }
 	}
-	if (!prt_open_resource(&res_encoding))
+	if (!prt_open_resource(res_encoding))
 	    return FALSE;
 	/* For the moment there are no checks on encoding resource files to
 	 * perform */
@@ -3012,13 +3030,13 @@ mch_print_begin(psettings)
 	if (prt_use_courier)
 	{
 	    /* Include ASCII range encoding vector */
-	    if (!prt_find_resource(prt_ascii_encoding, &res_encoding))
+	    if (!prt_find_resource(prt_ascii_encoding, res_encoding))
 	    {
 		EMSG2(_("E456: Can't find PostScript resource file \"%s.ps\""),
 							  prt_ascii_encoding);
 		return FALSE;
 	    }
-	    if (!prt_open_resource(&res_encoding))
+	    if (!prt_open_resource(res_encoding))
 		return FALSE;
 	    /* For the moment there are no checks on encoding resource files to
 	     * perform */
@@ -3041,44 +3059,44 @@ mch_print_begin(psettings)
     if (prt_out_mbyte && prt_custom_cmap)
     {
 	/* Find user supplied CMap */
-	if (!prt_find_resource(prt_cmap, &res_cmap))
+	if (!prt_find_resource(prt_cmap, res_cmap))
 	{
 	    EMSG2(_("E456: Can't find PostScript resource file \"%s.ps\""),
 								    prt_cmap);
 	    return FALSE;
 	}
-	if (!prt_open_resource(&res_cmap))
+	if (!prt_open_resource(res_cmap))
 	    return FALSE;
     }
 #endif
 
     /* List resources supplied */
-    STRCPY(buffer, res_prolog.title);
+    STRCPY(buffer, res_prolog->title);
     STRCAT(buffer, " ");
-    STRCAT(buffer, res_prolog.version);
+    STRCAT(buffer, res_prolog->version);
     prt_dsc_resources("DocumentSuppliedResources", "procset", buffer);
 #ifdef FEAT_MBYTE
     if (prt_out_mbyte)
     {
-	STRCPY(buffer, res_cidfont.title);
+	STRCPY(buffer, res_cidfont->title);
 	STRCAT(buffer, " ");
-	STRCAT(buffer, res_cidfont.version);
+	STRCAT(buffer, res_cidfont->version);
 	prt_dsc_resources(NULL, "procset", buffer);
 
 	if (prt_custom_cmap)
 	{
-	    STRCPY(buffer, res_cmap.title);
+	    STRCPY(buffer, res_cmap->title);
 	    STRCAT(buffer, " ");
-	    STRCAT(buffer, res_cmap.version);
+	    STRCAT(buffer, res_cmap->version);
 	    prt_dsc_resources(NULL, "cmap", buffer);
 	}
     }
     if (!prt_out_mbyte || prt_use_courier)
 #endif
     {
-	STRCPY(buffer, res_encoding.title);
+	STRCPY(buffer, res_encoding->title);
 	STRCAT(buffer, " ");
-	STRCAT(buffer, res_encoding.version);
+	STRCAT(buffer, res_encoding->version);
 	prt_dsc_resources(NULL, "encoding", buffer);
     }
     prt_dsc_requirements(prt_duplex, prt_tumble, prt_collate,
@@ -3121,15 +3139,15 @@ mch_print_begin(psettings)
     prt_dsc_noarg("BeginProlog");
 
     /* Add required procsets - NOTE: order is important! */
-    if (!prt_add_resource(&res_prolog))
+    if (!prt_add_resource(res_prolog))
 	return FALSE;
 #ifdef FEAT_MBYTE
     if (prt_out_mbyte)
     {
 	/* Add CID font procset, and any user supplied CMap */
-	if (!prt_add_resource(&res_cidfont))
+	if (!prt_add_resource(res_cidfont))
 	    return FALSE;
-	if (prt_custom_cmap && !prt_add_resource(&res_cmap))
+	if (prt_custom_cmap && !prt_add_resource(res_cmap))
 	    return FALSE;
     }
 #endif
@@ -3139,7 +3157,7 @@ mch_print_begin(psettings)
 #endif
 	/* There will be only one Roman font encoding to be included in the PS
 	 * file. */
-	if (!prt_add_resource(&res_encoding))
+	if (!prt_add_resource(res_encoding))
 	    return FALSE;
 
     prt_dsc_noarg("EndProlog");
@@ -3255,7 +3273,17 @@ mch_print_begin(psettings)
     prt_dsc_noarg("EndSetup");
 
     /* Fail if any problems writing out to the PS file */
-    return !prt_file_error;
+    retval = !prt_file_error;
+
+theend:
+    vim_free(res_prolog);
+    vim_free(res_encoding);
+#ifdef FEAT_MBYTE
+    vim_free(res_cidfont);
+    vim_free(res_cmap);
+#endif
+
+    return retval;
 }
 
     void
@@ -3308,10 +3336,9 @@ mch_print_end_page()
     return !prt_file_error;
 }
 
-/*ARGSUSED*/
     int
 mch_print_begin_page(str)
-    char_u	*str;
+    char_u	*str UNUSED;
 {
     int		page_num[2];
 
@@ -3379,11 +3406,10 @@ mch_print_start_line(margin, page_line)
 #endif
 }
 
-/*ARGSUSED*/
     int
 mch_print_text_out(p, len)
     char_u	*p;
-    int		len;
+    int		len UNUSED;
 {
     int		need_break;
     char_u	ch;

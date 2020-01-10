@@ -5,8 +5,9 @@ void setpcmark __ARGS((void));
 void checkpcmark __ARGS((void));
 pos_T *movemark __ARGS((int count));
 pos_T *movechangelist __ARGS((int count));
+pos_T *getmark_buf __ARGS((buf_T *buf, int c, int changefile));
 pos_T *getmark __ARGS((int c, int changefile));
-pos_T *getmark_fnum __ARGS((int c, int changefile, int *fnum));
+pos_T *getmark_buf_fnum __ARGS((buf_T *buf, int c, int changefile, int *fnum));
 pos_T *getnextmark __ARGS((pos_T *startpos, int dir, int begin_line));
 void fmarks_check_names __ARGS((buf_T *buf));
 int check_mark __ARGS((pos_T *pos));
@@ -26,5 +27,5 @@ int read_viminfo_filemark __ARGS((vir_T *virp, int force));
 void write_viminfo_filemarks __ARGS((FILE *fp));
 int removable __ARGS((char_u *name));
 int write_viminfo_marks __ARGS((FILE *fp_out));
-void copy_viminfo_marks __ARGS((vir_T *virp, FILE *fp_out, int count, int eof));
+void copy_viminfo_marks __ARGS((vir_T *virp, FILE *fp_out, int count, int eof, int flags));
 /* vim: set ft=c : */

@@ -34,6 +34,7 @@ static char	*mediumVersion = VIM_VERSION_MEDIUM;
 # if (defined(VMS) && defined(VAXC)) || defined(PROTO)
 char	longVersion[sizeof(VIM_VERSION_LONG_DATE) + sizeof(__DATE__)
 						      + sizeof(__TIME__) + 3];
+
     void
 make_version()
 {
@@ -54,6 +55,7 @@ char	*longVersion = VIM_VERSION_LONG_DATE __DATE__ " " __TIME__ ")";
 char	*longVersion = VIM_VERSION_LONG;
 #endif
 
+static void list_features __ARGS((void));
 static void version_msg __ARGS((char *s));
 
 static char *(features[]) =
@@ -134,6 +136,11 @@ static char *(features[]) =
 #else
 	"-comments",
 #endif
+#ifdef FEAT_CONCEAL
+	"+conceal",
+#else
+	"-conceal",
+#endif
 #ifdef FEAT_CRYPT
 	"+cryptv",
 #else
@@ -143,6 +150,11 @@ static char *(features[]) =
 	"+cscope",
 #else
 	"-cscope",
+#endif
+#ifdef FEAT_CURSORBIND
+	"+cursorbind",
+#else
+	"-cursorbind",
 #endif
 #ifdef CURSOR_SHAPE
 	"+cursorshape",
@@ -304,6 +316,15 @@ static char *(features[]) =
 #else
 	"-localmap",
 #endif
+#ifdef FEAT_LUA
+# ifdef DYNAMIC_LUA
+	"+lua/dyn",
+# else
+	"+lua",
+# endif
+#else
+	"-lua",
+#endif
 #ifdef FEAT_MENU
 	"+menu",
 #else
@@ -329,6 +350,7 @@ static char *(features[]) =
 # else
 	"-mouse",
 #endif
+
 #if defined(UNIX) || defined(VMS)
 # ifdef FEAT_MOUSE_DEC
 	"+mouse_dec",
@@ -350,17 +372,8 @@ static char *(features[]) =
 # else
 	"-mouse_netterm",
 # endif
-# ifdef FEAT_SYSMOUSE
-	"+mouse_sysmouse",
-# else
-	"-mouse_sysmouse",
-# endif
-# ifdef FEAT_MOUSE_XTERM
-	"+mouse_xterm",
-# else
-	"-mouse_xterm",
-# endif
 #endif
+
 #ifdef __QNX__
 # ifdef FEAT_MOUSE_PTERM
 	"+mouse_pterm",
@@ -368,6 +381,30 @@ static char *(features[]) =
 	"-mouse_pterm",
 # endif
 #endif
+
+#if defined(UNIX) || defined(VMS)
+# ifdef FEAT_MOUSE_SGR
+	"+mouse_sgr",
+# else
+	"-mouse_sgr",
+# endif
+# ifdef FEAT_SYSMOUSE
+	"+mouse_sysmouse",
+# else
+	"-mouse_sysmouse",
+# endif
+# ifdef FEAT_MOUSE_URXVT
+	"+mouse_urxvt",
+# else
+	"-mouse_urxvt",
+# endif
+# ifdef FEAT_MOUSE_XTERM
+	"+mouse_xterm",
+# else
+	"-mouse_xterm",
+# endif
+#endif
+
 #ifdef FEAT_MBYTE_IME
 # ifdef DYNAMIC_IME
 	"+multi_byte_ime/dyn",
@@ -407,11 +444,6 @@ static char *(features[]) =
 	"-ole",
 # endif
 #endif
-#ifdef FEAT_OSFILETYPE
-	"+osfiletype",
-#else
-	"-osfiletype",
-#endif
 #ifdef FEAT_PATH_EXTRA
 	"+path_extra",
 #else
@@ -425,6 +457,11 @@ static char *(features[]) =
 # endif
 #else
 	"-perl",
+#endif
+#ifdef FEAT_PERSISTENT_UNDO
+	"+persistent_undo",
+#else
+	"-persistent_undo",
 #endif
 #ifdef FEAT_PRINTER
 # ifdef FEAT_POSTSCRIPT
@@ -449,6 +486,15 @@ static char *(features[]) =
 # endif
 #else
 	"-python",
+#endif
+#ifdef FEAT_PYTHON3
+# ifdef DYNAMIC_PYTHON3
+	"+python3/dyn",
+# else
+	"+python3",
+# endif
+#else
+	"-python3",
 #endif
 #ifdef FEAT_QUICKFIX
 	"+quickfix",
@@ -493,6 +539,11 @@ static char *(features[]) =
 	"+sniff",
 #else
 	"-sniff",
+#endif
+#ifdef STARTUPTIME
+	"+startuptime",
+#else
+	"-startuptime",
 #endif
 #ifdef FEAT_STL_OPT
 	"+statusline",
@@ -680,6 +731,19 @@ static int included_patches[] =
     0
 };
 
+/*
+ * Place to put a short description when adding a feature with a patch.
+ * Keep it short, e.g.,: "relative numbers", "persistent undo".
+ * Also add a comment marker to separate the lines.
+ * See the official Vim patches for the diff format: It must use a context of
+ * one line only.  Create it by hand or use "diff -C2" and edit the patch.
+ */
+static char *(extra_patches[]) =
+{   /* Add your patch description below this line */
+/**/
+    NULL
+};
+
     int
 highest_patch()
 {
@@ -720,6 +784,76 @@ ex_version(eap)
     {
 	msg_putchar('\n');
 	list_version();
+    }
+}
+
+/*
+ * List all features aligned in columns, dictionary style.
+ */
+    static void
+list_features()
+{
+    int		i;
+    int		ncol;
+    int		nrow;
+    int		nfeat = 0;
+    int		width = 0;
+
+    /* Find the length of the longest feature name, use that + 1 as the column
+     * width */
+    for (i = 0; features[i] != NULL; ++i)
+    {
+	int l = (int)STRLEN(features[i]);
+
+	if (l > width)
+	    width = l;
+	++nfeat;
+    }
+    width += 1;
+
+    if (Columns < width)
+    {
+	/* Not enough screen columns - show one per line */
+	for (i = 0; features[i] != NULL; ++i)
+	{
+	    version_msg(features[i]);
+	    if (msg_col > 0)
+		msg_putchar('\n');
+	}
+	return;
+    }
+
+    /* The rightmost column doesn't need a separator.
+     * Sacrifice it to fit in one more column if possible. */
+    ncol = (int) (Columns + 1) / width;
+    nrow = nfeat / ncol + (nfeat % ncol ? 1 : 0);
+
+    /* i counts columns then rows.  idx counts rows then columns. */
+    for (i = 0; !got_int && i < nrow * ncol; ++i)
+    {
+	int idx = (i / ncol) + (i % ncol) * nrow;
+
+	if (idx < nfeat)
+	{
+	    int last_col = (i + 1) % ncol == 0;
+
+	    msg_puts((char_u *)features[idx]);
+	    if (last_col)
+	    {
+		if (msg_col > 0)
+		    msg_putchar('\n');
+	    }
+	    else
+	    {
+		while (msg_col % width)
+		    msg_putchar(' ');
+	    }
+	}
+	else
+	{
+	    if (msg_col > 0)
+		msg_putchar('\n');
+	}
     }
 }
 
@@ -782,11 +916,8 @@ list_version()
 # endif
 #endif
 
-#ifdef RISCOS
-    MSG_PUTS(_("\nRISC OS version"));
-#endif
 #ifdef VMS
-    MSG_PUTS("\nOpenVMS version");
+    MSG_PUTS(_("\nOpenVMS version"));
 # ifdef HAVE_PATHDEF
     if (*compiled_arch != NUL)
     {
@@ -822,6 +953,19 @@ list_version()
 		}
 		first = -1;
 	    }
+	}
+    }
+
+    /* Print the list of extra patch descriptions if there is at least one. */
+    if (extra_patches[0] != NULL)
+    {
+	MSG_PUTS(_("\nExtra patches: "));
+	s = "";
+	for (i = 0; extra_patches[i] != NULL; ++i)
+	{
+	    MSG_PUTS(s);
+	    s = ", ";
+	    MSG_PUTS(extra_patches[i]);
 	}
     }
 
@@ -870,17 +1014,9 @@ list_version()
 #else
 # ifdef FEAT_GUI_GTK
 #  ifdef FEAT_GUI_GNOME
-#   ifdef HAVE_GTK2
     MSG_PUTS(_("with GTK2-GNOME GUI."));
-#   else
-    MSG_PUTS(_("with GTK-GNOME GUI."));
-#   endif
 #  else
-#   ifdef HAVE_GTK2
     MSG_PUTS(_("with GTK2 GUI."));
-#   else
-    MSG_PUTS(_("with GTK GUI."));
-#   endif
 #  endif
 # else
 #  ifdef FEAT_GUI_MOTIF
@@ -899,13 +1035,13 @@ list_version()
 #      if defined(MSWIN)
     MSG_PUTS(_("with GUI."));
 #      else
-#	if defined (TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON
+#	if defined(TARGET_API_MAC_CARBON) && TARGET_API_MAC_CARBON
     MSG_PUTS(_("with Carbon GUI."));
 #	else
-#	 if defined (TARGET_API_MAC_OSX) && TARGET_API_MAC_OSX
+#	 if defined(TARGET_API_MAC_OSX) && TARGET_API_MAC_OSX
     MSG_PUTS(_("with Cocoa GUI."));
 #	 else
-#	  if defined (MACOS)
+#	  if defined(MACOS)
     MSG_PUTS(_("with (classic) GUI."));
 #	  endif
 #	 endif
@@ -918,15 +1054,8 @@ list_version()
 #endif
     version_msg(_("  Features included (+) or not (-):\n"));
 
-    /* print all the features */
-    for (i = 0; features[i] != NULL; ++i)
-    {
-	version_msg(features[i]);
-	if (msg_col > 0)
-	    version_msg(" ");
-    }
+    list_features();
 
-    version_msg("\n");
 #ifdef SYS_VIMRC_FILE
     version_msg(_("   system vimrc file: \""));
     version_msg(SYS_VIMRC_FILE);
@@ -1035,6 +1164,21 @@ version_msg(s)
 }
 
 static void do_intro_line __ARGS((int row, char_u *mesg, int add_version, int attr));
+
+/*
+ * Show the intro message when not editing a file.
+ */
+    void
+maybe_intro_message()
+{
+    if (bufempty()
+	    && curbuf->b_fname == NULL
+#ifdef FEAT_WINDOWS
+	    && firstwin->w_next == NULL
+#endif
+	    && vim_strchr(p_shm, SHM_INTRO) == NULL)
+	intro_message(FALSE);
+}
 
 /*
  * Give an introductory message about Vim.
@@ -1206,14 +1350,11 @@ do_intro_line(row, mesg, add_version, attr)
 	if (highest_patch())
 	{
 	    /* Check for 9.9x or 9.9xx, alpha/beta version */
-	    if (isalpha((int)mediumVersion[3]))
+	    if (isalpha((int)vers[3]))
 	    {
-		if (isalpha((int)mediumVersion[4]))
-		    sprintf((char *)vers + 5, ".%d%s", highest_patch(),
-							   mediumVersion + 5);
-		else
-		    sprintf((char *)vers + 4, ".%d%s", highest_patch(),
-							   mediumVersion + 4);
+		int len = (isalpha((int)vers[4])) ? 5 : 4;
+		sprintf((char *)vers + len, ".%d%s", highest_patch(),
+							 mediumVersion + len);
 	    }
 	    else
 		sprintf((char *)vers + 3, ".%d", highest_patch());
@@ -1253,10 +1394,9 @@ do_intro_line(row, mesg, add_version, attr)
 /*
  * ":intro": clear screen, display intro screen and wait for return.
  */
-/*ARGSUSED*/
     void
 ex_intro(eap)
-    exarg_T	*eap;
+    exarg_T	*eap UNUSED;
 {
     screenclear();
     intro_message(TRUE);

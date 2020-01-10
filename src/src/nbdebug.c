@@ -17,7 +17,7 @@
  * debugging startup problems because gvim will be started automatically from
  * netbeans and cannot be run directly from a debugger. The only way to debug
  * a gvim started by netbeans is by attaching a debugger to it. Without this
- * tool all starup code will have completed before you can get the pid and
+ * tool all startup code will have completed before you can get the pid and
  * attach.
  *
  * The second tool is a log tool.
@@ -33,7 +33,6 @@ FILE		*nb_debug = NULL;
 u_int		 nb_dlevel = 0;		/* nb_debug verbosity level */
 
 void		 nbdb(char *, ...);
-void		 nbtrace(char *, ...);
 
 static int	 lookup(char *);
 #ifdef USE_NB_ERRORHANDLER
@@ -100,25 +99,6 @@ nbdebug_log_init(
 }    /* end nbdebug_log_init */
 
 
-
-
-void
-nbtrace(
-	char		*fmt,
-	...)
-{
-	va_list		 ap;
-
-	if (nb_debug!= NULL && (nb_dlevel & (NB_TRACE | NB_TRACE_VERBOSE))) {
-		va_start(ap, fmt);
-		vfprintf(nb_debug, fmt, ap);
-		va_end(ap);
-		fflush(nb_debug);
-	}
-
-}    /* end nbtrace */
-
-
 void
 nbdbg(
 	char		*fmt,
@@ -134,23 +114,6 @@ nbdbg(
 	}
 
 }    /* end nbdbg */
-
-
-void
-nbprt(
-	char		*fmt,
-	...)
-{
-	va_list		 ap;
-
-	if (nb_debug != NULL && nb_dlevel & NB_PRINT) {
-		va_start(ap, fmt);
-		vfprintf(nb_debug, fmt, ap);
-		va_end(ap);
-		fflush(nb_debug);
-	}
-
-}    /* end nbprt */
 
 
 static int

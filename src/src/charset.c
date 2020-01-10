@@ -14,10 +14,13 @@ static int win_chartabsize __ARGS((win_T *wp, char_u *p, colnr_T col));
 #endif
 
 #ifdef FEAT_MBYTE
+# if defined(HAVE_WCHAR_H)
+#  include <wchar.h>	    /* for towupper() and towlower() */
+# endif
 static int win_nolbr_chartabsize __ARGS((win_T *wp, char_u *s, colnr_T col, int *headp));
 #endif
 
-static int nr2hex __ARGS((int c));
+static unsigned nr2hex __ARGS((unsigned c));
 
 static int    chartab_initialized = FALSE;
 
@@ -174,6 +177,11 @@ buf_init_chartab(buf, global)
 	    if (VIM_ISDIGIT(*p))
 		c = getdigits(&p);
 	    else
+#ifdef FEAT_MBYTE
+		 if (has_mbyte)
+		c = mb_ptr2char_adv(&p);
+	    else
+#endif
 		c = *p++;
 	    c2 = -1;
 	    if (*p == '-' && p[1] != NUL)
@@ -182,9 +190,14 @@ buf_init_chartab(buf, global)
 		if (VIM_ISDIGIT(*p))
 		    c2 = getdigits(&p);
 		else
+#ifdef FEAT_MBYTE
+		     if (has_mbyte)
+		    c2 = mb_ptr2char_adv(&p);
+		else
+#endif
 		    c2 = *p++;
 	    }
-	    if (c <= 0 || (c2 < c && c2 != -1) || c2 >= 256
+	    if (c <= 0 || c >= 256 || (c2 < c && c2 != -1) || c2 >= 256
 						 || !(*p == NUL || *p == ','))
 		return FAIL;
 
@@ -271,7 +284,12 @@ buf_init_chartab(buf, global)
 		}
 		++c;
 	    }
+
+	    c = *p;
 	    p = skip_to_option_part(p);
+	    if (c == ',' && *p == NUL)
+		/* Trailing comma is not allowed. */
+		return FAIL;
 	}
     }
     chartab_initialized = TRUE;
@@ -450,41 +468,42 @@ str_foldcase(str, orglen, buf, buflen)
 	    if (enc_utf8)
 	    {
 		int	c = utf_ptr2char(STR_PTR(i));
-		int	ol = utf_ptr2len(STR_PTR(i));
+		int	olen = utf_ptr2len(STR_PTR(i));
 		int	lc = utf_tolower(c);
 
 		/* Only replace the character when it is not an invalid
 		 * sequence (ASCII character or more than one byte) and
 		 * utf_tolower() doesn't return the original character. */
-		if ((c < 0x80 || ol > 1) && c != lc)
+		if ((c < 0x80 || olen > 1) && c != lc)
 		{
-		    int	    nl = utf_char2len(lc);
+		    int	    nlen = utf_char2len(lc);
 
 		    /* If the byte length changes need to shift the following
 		     * characters forward or backward. */
-		    if (ol != nl)
+		    if (olen != nlen)
 		    {
-			if (nl > ol)
+			if (nlen > olen)
 			{
-			    if (buf == NULL ? ga_grow(&ga, nl - ol + 1) == FAIL
-						    : len + nl - ol >= buflen)
+			    if (buf == NULL
+				    ? ga_grow(&ga, nlen - olen + 1) == FAIL
+				    : len + nlen - olen >= buflen)
 			    {
 				/* out of memory, keep old char */
 				lc = c;
-				nl = ol;
+				nlen = olen;
 			    }
 			}
-			if (ol != nl)
+			if (olen != nlen)
 			{
 			    if (buf == NULL)
 			    {
-				STRMOVE(GA_PTR(i) + nl, GA_PTR(i) + ol);
-				ga.ga_len += nl - ol;
+				STRMOVE(GA_PTR(i) + nlen, GA_PTR(i) + olen);
+				ga.ga_len += nlen - olen;
 			    }
 			    else
 			    {
-				STRMOVE(buf + i + nl, buf + i + ol);
-				len += nl - ol;
+				STRMOVE(buf + i + nlen, buf + i + olen);
+				len += nlen - olen;
 			    }
 			}
 		    }
@@ -664,7 +683,7 @@ transchar_hex(buf, c)
     }
 #endif
     buf[++i] = nr2hex((unsigned)c >> 4);
-    buf[++i] = nr2hex(c);
+    buf[++i] = nr2hex((unsigned)c);
     buf[++i] = '>';
     buf[++i] = NUL;
 }
@@ -674,9 +693,9 @@ transchar_hex(buf, c)
  * Lower case letters are used to avoid the confusion of <F1> being 0xf1 or
  * function key 1.
  */
-    static int
+    static unsigned
 nr2hex(c)
-    int		c;
+    unsigned	c;
 {
     if ((c & 0xf) <= 9)
 	return (c & 0xf) + '0';
@@ -750,7 +769,7 @@ ptr2cells(p)
 }
 
 /*
- * Return the number of characters string "s" will take on the screen,
+ * Return the number of character cells string "s" will take on the screen,
  * counting TABs as two characters: "^I".
  */
     int
@@ -761,8 +780,8 @@ vim_strsize(s)
 }
 
 /*
- * Return the number of characters string "s[len]" will take on the screen,
- * counting TABs as two characters: "^I".
+ * Return the number of character cells string "s[len]" will take on the
+ * screen, counting TABs as two characters: "^I".
  */
     int
 vim_strnsize(s, len)
@@ -829,14 +848,25 @@ win_chartabsize(wp, p, col)
 #endif
 
 /*
- * return the number of characters the string 's' will take on the screen,
- * taking into account the size of a tab
+ * Return the number of characters the string 's' will take on the screen,
+ * taking into account the size of a tab.
  */
     int
 linetabsize(s)
     char_u	*s;
 {
-    colnr_T	col = 0;
+    return linetabsize_col(0, s);
+}
+
+/*
+ * Like linetabsize(), but starting at column "startcol".
+ */
+    int
+linetabsize_col(startcol, s)
+    int		startcol;
+    char_u	*s;
+{
+    colnr_T	col = startcol;
 
     while (*s != NUL)
 	col += lbr_chartabsize_adv(&s, col);
@@ -880,16 +910,24 @@ vim_isIDc(c)
 vim_iswordc(c)
     int c;
 {
+    return vim_iswordc_buf(c, curbuf);
+}
+
+    int
+vim_iswordc_buf(c, buf)
+    int		c;
+    buf_T	*buf;
+{
 #ifdef FEAT_MBYTE
     if (c >= 0x100)
     {
 	if (enc_dbcs != 0)
-	    return dbcs_class((unsigned)c >> 8, c & 0xff) >= 2;
+	    return dbcs_class((unsigned)c >> 8, (unsigned)(c & 0xff)) >= 2;
 	if (enc_utf8)
 	    return utf_class(c) >= 2;
     }
 #endif
-    return (c > 0 && c < 0x100 && GET_CHARTAB(curbuf, c) != 0);
+    return (c > 0 && c < 0x100 && GET_CHARTAB(buf, c) != 0);
 }
 
 /*
@@ -906,19 +944,17 @@ vim_iswordp(p)
     return GET_CHARTAB(curbuf, *p) != 0;
 }
 
-#if defined(FEAT_SYN_HL) || defined(PROTO)
     int
-vim_iswordc_buf(p, buf)
+vim_iswordp_buf(p, buf)
     char_u	*p;
     buf_T	*buf;
 {
-# ifdef FEAT_MBYTE
+#ifdef FEAT_MBYTE
     if (has_mbyte && MB_BYTE2LEN(*p) > 1)
 	return mb_get_class(p) >= 2;
-# endif
+#endif
     return (GET_CHARTAB(buf, *p) != 0);
 }
-#endif
 
 /*
  * return TRUE if 'c' is a valid file-name character
@@ -1026,13 +1062,12 @@ lbr_chartabsize_adv(s, col)
  * string at start of line.  Warning: *headp is only set if it's a non-zero
  * value, init to 0 before calling.
  */
-/*ARGSUSED*/
     int
 win_lbr_chartabsize(wp, s, col, headp)
     win_T	*wp;
     char_u	*s;
     colnr_T	col;
-    int		*headp;
+    int		*headp UNUSED;
 {
 #ifdef FEAT_LINEBREAK
     int		c;
@@ -1090,7 +1125,7 @@ win_lbr_chartabsize(wp, s, col, headp)
 	 */
 	numberextra = win_col_off(wp);
 	col2 = col;
-	colmax = W_WIDTH(wp) - numberextra;
+	colmax = (colnr_T)(W_WIDTH(wp) - numberextra);
 	if (col >= colmax)
 	{
 	    n = colmax + win_col_off2(wp);
@@ -1201,19 +1236,21 @@ in_win_border(wp, vcol)
     win_T	*wp;
     colnr_T	vcol;
 {
-    colnr_T	width1;		/* width of first line (after line number) */
-    colnr_T	width2;		/* width of further lines */
+    int		width1;		/* width of first line (after line number) */
+    int		width2;		/* width of further lines */
 
 #ifdef FEAT_VERTSPLIT
     if (wp->w_width == 0)	/* there is no border */
 	return FALSE;
 #endif
     width1 = W_WIDTH(wp) - win_col_off(wp);
-    if (vcol < width1 - 1)
+    if ((int)vcol < width1 - 1)
 	return FALSE;
-    if (vcol == width1 - 1)
+    if ((int)vcol == width1 - 1)
 	return TRUE;
     width2 = width1 + win_col_off2(wp);
+    if (width2 <= 0)
+	return FALSE;
     return ((vcol - width1) % width2 == width2 - 1);
 }
 #endif /* FEAT_MBYTE */
@@ -1244,7 +1281,10 @@ getvcol(wp, pos, start, cursor, end)
 
     vcol = 0;
     ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
-    posptr = ptr + pos->col;
+    if (pos->col == MAXCOL)
+	posptr = NULL;  /* continue until the NUL */
+    else
+	posptr = ptr + pos->col;
 
     /*
      * This function is used very often, do some speed optimizations.
@@ -1302,7 +1342,7 @@ getvcol(wp, pos, start, cursor, end)
 		    incr = CHARSIZE(c);
 	    }
 
-	    if (ptr >= posptr)	/* character at pos->col */
+	    if (posptr != NULL && ptr >= posptr) /* character at pos->col */
 		break;
 
 	    vcol += incr;
@@ -1323,7 +1363,7 @@ getvcol(wp, pos, start, cursor, end)
 		break;
 	    }
 
-	    if (ptr >= posptr)	/* character at pos->col */
+	    if (posptr != NULL && ptr >= posptr) /* character at pos->col */
 		break;
 
 	    vcol += incr;
@@ -1396,13 +1436,13 @@ getvvcol(wp, pos, start, cursor, end)
 # ifdef FEAT_MBYTE
 	/* Cannot put the cursor on part of a wide character. */
 	ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
-	if (pos->col < STRLEN(ptr))
+	if (pos->col < (colnr_T)STRLEN(ptr))
 	{
 	    int c = (*mb_ptr2char)(ptr + pos->col);
 
 	    if (c != TAB && vim_isprintc(c))
 	    {
-		endadd = char2cells(c) - 1;
+		endadd = (colnr_T)(char2cells(c) - 1);
 		if (coladd > endadd)	/* past end of line */
 		    endadd = 0;
 		else
@@ -1573,10 +1613,9 @@ vim_isxdigit(c)
 #define LATIN1LOWER 'l'
 #define LATIN1UPPER 'U'
 
-/*                                                                 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]%_'abcdefghijklmnopqrstuvwxyz{|}~                                  ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ */
 static char_u latin1flags[257] = "                                                                 UUUUUUUUUUUUUUUUUUUUUUUUUU      llllllllllllllllllllllllll                                                                     UUUUUUUUUUUUUUUUUUUUUUU UUUUUUUllllllllllllllllllllllll llllllll";
-static char_u latin1upper[257] = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`ABCDEFGHIJKLMNOPQRSTUVWXYZ{|}~€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ÷ØÙÚÛÜİŞÿ";
-static char_u latin1lower[257] = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@abcdefghijklmnopqrstuvwxyz[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€‚ƒ„…†‡ˆ‰Š‹Œ‘’“”•–—˜™š›œŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿àáâãäåæçèéêëìíîïğñòóôõö×øùúûüışßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ";
+static char_u latin1upper[257] = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`ABCDEFGHIJKLMNOPQRSTUVWXYZ{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xf7\xd8\xd9\xda\xdb\xdc\xdd\xde\xff";
+static char_u latin1lower[257] = "                                 !\"#$%&'()*+,-./0123456789:;<=>?@abcdefghijklmnopqrstuvwxyz[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xd7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff";
 
     int
 vim_islower(c)
@@ -1801,7 +1840,7 @@ vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
 			hex = 0;	/* can't be octal */
 			break;
 		    }
-		    if (ptr[n] > '0')
+		    if (ptr[n] >= '0')
 			hex = '0';	/* assume octal */
 		}
 	    }
