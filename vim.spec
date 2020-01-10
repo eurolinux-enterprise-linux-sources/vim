@@ -24,7 +24,7 @@ Summary: The VIM editor
 URL:     http://www.vim.org/
 Name: vim
 Version: %{baseversion}.%{beta}%{patchlevel}
-Release: 1.6%{?dist}
+Release: 1.8%{?dist}
 License: Vim and GPLv2+ and BSD and LGPLv2+ and Open Publication
 Group: Applications/Editors
 Source0: ftp://ftp.vim.org/pub/vim/unix/vim-%{baseversion}%{?beta}%{?CVSDATE}.tar.bz2
@@ -491,6 +491,8 @@ Patch3010: vim-7.0-syncolor.patch
 Patch3011: vim-7.0-specedit.patch
 Patch3012: vim72-rh514717.patch
 Patch3013: vim-7.2-629568.patch
+# bugzila 663753:
+Patch3014: vim-7.2-httpd.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: python-devel ncurses-devel gettext perl-devel
@@ -1043,6 +1045,7 @@ perl -pi -e "s,bin/nawk,bin/awk,g" runtime/tools/mve.awk
 %patch3011 -p1
 %patch3012 -p1
 %patch3013 -p1
+%patch3014 -p1
 
 cp -f %{SOURCE15} runtime/syntax/forth.vim
 cp -f %{SOURCE16} runtime/plugin/netrwPlugin.vim
@@ -1249,7 +1252,7 @@ chmod 0644 $RPM_BUILD_ROOT/%{_sysconfdir}/profile.d/*
 install -p -m644 %{SOURCE4} $RPM_BUILD_ROOT/%{_sysconfdir}/vimrc
 install -p -m644 %{SOURCE4} $RPM_BUILD_ROOT/%{_sysconfdir}/virc
 (cd $RPM_BUILD_ROOT/%{_datadir}/%{name}/%{vimdir}/doc;
- gzip -9 *.txt
+ gzip -9 -n *.txt
  gzip -d help.txt.gz version7.txt.gz sponsor.txt.gz
  cp %{SOURCE12} .
  cat tags | sed -e 's/\t\(.*.txt\)\t/\t\1.gz\t/;s/\thelp.txt.gz\t/\thelp.txt\t/;s/\tversion7.txt.gz\t/\tversion7.txt\t/;s/\tsponsor.txt.gz\t/\tsponsor.txt\t/' > tags.new; mv -f tags.new tags
@@ -1488,6 +1491,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/icons/hicolor/*/apps/*
 
 %changelog
+* Fri Feb 17 2012 Karsten Hopp <karsten@redhat.com> 7.2.411-1.8
+- avoid multilib conflict with compressed text files (gzip -n)
+
+* Fri Feb 17 2012 Karsten Hopp <karsten@redhat.com> 7.2.411-1.7
+- fix syntax highlighting of httpd config files (663753)
+- fix vimexplorer directory listings, i.e. vim .. (652610)
+- don't print an additional 'e' in zh_CN.gbk vimexplorer (594997)
+- fix macro usage in specfile template (634902)
+
 * Mon Feb 14 2011 Karsten Hopp <karsten@redhat.com> 7.2.411-1.6
 - upstream fix for #629568
 

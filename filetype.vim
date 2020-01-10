@@ -111,7 +111,7 @@ au BufNewFile,BufRead proftpd.conf*		call s:StarSetf('apachestyle')
 
 " Apache config file
 au BufNewFile,BufRead .htaccess			 setf apache
-au BufNewFile,BufRead httpd.conf*,srm.conf*,access.conf*,apache.conf*,apache2.conf*,/etc/apache2/*.conf* call s:StarSetf('apache')
+au BufNewFile,BufRead httpd.conf*,srm.conf*,access.conf*,apache.conf*,apache2.conf*,/etc/httpd/conf.d/*.conf* call s:StarSetf('apache')
 
 " XA65 MOS6510 cross assembler
 au BufNewFile,BufRead *.a65			setf a65
@@ -2292,7 +2292,7 @@ au StdinReadPost * if !did_filetype() | runtime! scripts.vim | endif
 " like are used.
 
 " More Apache files.
-au BufNewFile,BufRead /etc/apache2/conf.*/*,/etc/apache2/sites-*/*,/etc/apache2/mods-*/*		call s:StarSetf('apache')
+au BufNewFile,BufRead /etc/httpd/conf.d/conf.*/*,/etc/httpd/conf.d/sites-*/*,/etc/httpd/conf.d/mods-*/*		call s:StarSetf('apache')
 
 " Asterisk config file
 au BufNewFile,BufRead *asterisk/*.conf*		call s:StarSetf('asterisk')

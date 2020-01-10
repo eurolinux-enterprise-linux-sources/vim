@@ -6086,7 +6086,7 @@ fun! s:PerformListing(islocal)
      " remove priority pattern prefix
 "     call Decho("remove priority pattern prefix")
      let sepchr= "\<Char-0xff>"
-     exe 'silent keepjumps '.w:netrw_bannercnt.',$s/^\d\{3}'.sepchr.'//e'
+     exe 'silent keepjumps '.w:netrw_bannercnt.',$s/^\d\{3}'.sepchr.'//'
 
     elseif a:islocal
      if w:netrw_bannercnt < line("$")
@@ -6733,7 +6733,13 @@ fun! s:LocalListing()
 
   " get the list of files contained in the current directory
   let dirname    = escape(b:netrw_curdir,g:netrw_glob_escape)
-  let dirnamelen = strlen(b:netrw_curdir)
+  if dirname =~ '\.\.'
+   let dirname = substitute(dirname,'[^/]*/\.\.','','g')
+  endif
+  if dirname == ''
+   let dirname = '/'
+  endif
+  let dirnamelen = strlen(dirname)
   let filelist   = glob(s:ComposePath(dirname,"*"))
 "  call Decho("glob(dirname<".dirname."/*>)=".filelist)
   if filelist != ""
@@ -6757,10 +6763,10 @@ fun! s:LocalListing()
   if filelist !~ '[\\/]\.\.[\\/]\=\(\n\|$\)'
     " include ../ in the glob() entry if its missing
 "   call Decho("forcibly tacking on ..")
-   let filelist= filelist."\n".s:ComposePath(b:netrw_curdir,"../")
+   let filelist= filelist."\n".s:ComposePath(dirname,"../")
 "   call Decho("filelist<".filelist.">")
   endif
-  if b:netrw_curdir == '/'
+  if dirname == '/'
    " remove .. from filelist when current directory is root directory
 "   call Decho("remove .. from filelist")
    let filelist= substitute(filelist,'/\.\.\n','','')
