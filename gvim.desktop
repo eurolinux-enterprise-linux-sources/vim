@@ -60,5 +60,4 @@ Icon=gvim
 Type=Application
 Terminal=false
 X-XClassHintResName=VIM
-MapNotify=false
 Categories=Utility;TextEditor;

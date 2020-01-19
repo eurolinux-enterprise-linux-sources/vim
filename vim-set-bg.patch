@@ -1,0 +1,401 @@
+diff --git a/runtime/doc/tags b/runtime/doc/tags
+index b7e16df..f5201aa 100644
+--- a/runtime/doc/tags
++++ b/runtime/doc/tags
+@@ -920,6 +920,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
+ 't_KJ'	term.txt	/*'t_KJ'*
+ 't_KK'	term.txt	/*'t_KK'*
+ 't_KL'	term.txt	/*'t_KL'*
++'t_RB'	term.txt	/*'t_RB'*
+ 't_RI'	term.txt	/*'t_RI'*
+ 't_RV'	term.txt	/*'t_RV'*
+ 't_SI'	term.txt	/*'t_SI'*
+@@ -7987,6 +7988,7 @@ t_KI	term.txt	/*t_KI*
+ t_KJ	term.txt	/*t_KJ*
+ t_KK	term.txt	/*t_KK*
+ t_KL	term.txt	/*t_KL*
++t_RB	term.txt	/*t_RB*
+ t_RI	term.txt	/*t_RI*
+ t_RV	term.txt	/*t_RV*
+ t_SI	term.txt	/*t_SI*
+diff --git a/runtime/doc/term.txt b/runtime/doc/term.txt
+index c11ddea..bdd6aba 100644
+--- a/runtime/doc/term.txt
++++ b/runtime/doc/term.txt
+@@ -300,6 +300,8 @@ Added by Vim (there are no standard codes for these):
+ 		|xterm-8bit| |v:termresponse| |'ttymouse'| |xterm-codes|
+ 	t_u7	request cursor position (for xterm)		*t_u7* *'t_u7'*
+ 		see |'ambiwidth'|
++	t_RB	request terminal background color		*t_RB* *'t_RB'*
++		see |'ambiwidth'|
+ 
+ KEY CODES
+ Note: Use the <> form if possible
+diff --git a/src/ascii.h b/src/ascii.h
+index a3cfecf..7ed736a 100644
+--- a/src/ascii.h
++++ b/src/ascii.h
+@@ -34,10 +34,6 @@
+ #define ESC_STR_nc	"\033"
+ #define DEL		0x7f
+ #define DEL_STR		(char_u *)"\177"
+-#define CSI		0x9b	/* Control Sequence Introducer */
+-#define CSI_STR		"\233"
+-#define DCS		0x90	/* Device Control String */
+-#define STERM		0x9c	/* String Terminator */
+ 
+ #define POUND		0xA3
+ 
+@@ -117,11 +113,6 @@
+ #define ESC_STR_nc	"\x27"
+ #define DEL		0x07
+ #define DEL_STR		(char_u *)"\007"
+-/* TODO: EBCDIC Code page dependent (here 1047) */
+-#define CSI		0x9b	/* Control Sequence Introducer */
+-#define CSI_STR		"\233"
+-#define DCS		0x90	/* Device Control String */
+-#define STERM		0x9c	/* String Terminator */
+ 
+ #define POUND		0xB1
+ 
+@@ -173,6 +164,13 @@ extern char MetaCharTable[];
+ 
+ #endif /* defined EBCDIC */
+ 
++/* TODO: EBCDIC Code page dependent (here 1047) */
++#define CSI		0x9b	/* Control Sequence Introducer */
++#define CSI_STR		"\233"
++#define DCS		0x90	/* Device Control String */
++#define OSC		0x9d	/* Operating System Command */
++#define STERM		0x9c	/* String Terminator */
++
+ /*
+  * Character that separates dir names in a path.
+  * For MS-DOS, WIN32 and OS/2 we use a backslash.  A slash mostly works
+diff --git a/src/main.c b/src/main.c
+index 885192b..41c2c41 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -825,8 +825,11 @@ vim_main2(int argc UNUSED, char **argv UNUSED)
+ 
+     starttermcap();	    /* start termcap if not done by wait_return() */
+     TIME_MSG("start termcap");
+-#if defined(FEAT_TERMRESPONSE) && defined(FEAT_MBYTE)
++#if defined(FEAT_TERMRESPONSE)
++# if defined(FEAT_MBYTE)
+     may_req_ambiguous_char_width();
++# endif
++    may_req_bg_color();
+ #endif
+ 
+ #ifdef FEAT_MOUSE
+diff --git a/src/proto/term.pro b/src/proto/term.pro
+index b3d0df3..f0c2a01 100644
+--- a/src/proto/term.pro
++++ b/src/proto/term.pro
+@@ -36,6 +36,7 @@ void starttermcap __ARGS((void));
+ void stoptermcap __ARGS((void));
+ void may_req_termresponse __ARGS((void));
+ void may_req_ambiguous_char_width __ARGS((void));
++void may_req_bg_color __ARGS((void));
+ int swapping_screen __ARGS((void));
+ void setmouse __ARGS((void));
+ int mouse_has __ARGS((int c));
+diff --git a/src/term.c b/src/term.c
+index 46274d8..660df07 100644
+--- a/src/term.c
++++ b/src/term.c
+@@ -124,6 +124,11 @@ static int crv_status = CRV_GET;
+ #  define U7_SENT	2	/* did send T_U7, waiting for answer */
+ #  define U7_GOT	3	/* received T_U7 response */
+ static int u7_status = U7_GET;
++/* Request background color report: */
++#  define RBG_GET	1	/* send T_RBG when switched to RAW mode */
++#  define RBG_SENT	2	/* did send T_RBG, waiting for answer */
++#  define RBG_GOT	3	/* received T_RBG response */
++static int rbg_status = RBG_GET;
+ # endif
+ 
+ /*
+@@ -949,6 +954,7 @@ static struct builtin_term builtin_termcaps[] =
+     {(int)KS_CWP,	IF_EB("\033[3;%d;%dt", ESC_STR "[3;%d;%dt")},
+ #  endif
+     {(int)KS_CRV,	IF_EB("\033[>c", ESC_STR "[>c")},
++    {(int)KS_RBG,	IF_EB("\033]11;?\007", ESC_STR "]11;?\007")},
+     {(int)KS_U7,	IF_EB("\033[6n", ESC_STR "[6n")},
+ 
+     {K_UP,		IF_EB("\033O*A", ESC_STR "O*A")},
+@@ -1240,6 +1246,7 @@ static struct builtin_term builtin_termcaps[] =
+ #  endif
+     {(int)KS_CRV,	"[CRV]"},
+     {(int)KS_U7,	"[U7]"},
++    {(int)KS_RBG,	"[RBG]"},
+     {K_UP,		"[KU]"},
+     {K_DOWN,		"[KD]"},
+     {K_LEFT,		"[KL]"},
+@@ -2357,7 +2364,7 @@ term_7to8bit(p)
+ 	if (p[1] == '[')
+ 	    return CSI;
+ 	if (p[1] == ']')
+-	    return 0x9d;
++	    return OSC;
+ 	if (p[1] == 'O')
+ 	    return 0x8f;
+     }
+@@ -3224,7 +3231,8 @@ settmode(tmode)
+ 		 * doesn't work in Cooked mode, an external program may get
+ 		 * them. */
+ 		if (tmode != TMODE_RAW && (crv_status == CRV_SENT
+-					 || u7_status == U7_SENT))
++					 || u7_status == U7_SENT
++					 || rbg_status == RBG_SENT))
+ 		    (void)vpeekc_nomap();
+ 		check_for_codes_from_term();
+ 	    }
+@@ -3285,8 +3293,9 @@ stoptermcap()
+ 	if (!gui.in_use && !gui.starting)
+ # endif
+ 	{
+-	    /* May need to discard T_CRV or T_U7 response. */
+-	    if (crv_status == CRV_SENT || u7_status == U7_SENT)
++	    /* May need to discard T_CRV, T_U7 or T_RBG response. */
++	    if (crv_status == CRV_SENT || u7_status == U7_SENT
++						     || rbg_status == RBG_SENT)
+ 	    {
+ # ifdef UNIX
+ 		/* Give the terminal a chance to respond. */
+@@ -3398,6 +3407,36 @@ may_req_ambiguous_char_width()
+ }
+ # endif
+ 
++#if defined(FEAT_TERMRESPONSE) || defined(PROTO)
++/*
++ * Similar to requesting the version string: Request the terminal background
++ * color when it is the right moment.
++ */
++    void
++may_req_bg_color()
++{
++    if (rbg_status == RBG_GET
++	    && cur_tmode == TMODE_RAW
++	    && termcap_active
++	    && p_ek
++#  ifdef UNIX
++	    && isatty(1)
++	    && isatty(read_cmd_fd)
++#  endif
++	    && *T_RBG != NUL
++	    && !option_was_set((char_u *)"bg"))
++    {
++	LOG_TR("Sending BG request");
++	out_str(T_RBG);
++	rbg_status = RBG_SENT;
++	/* check for the characters now, otherwise they might be eaten by
++	 * get_keystroke() */
++	out_flush();
++	(void)vpeekc_nomap();
++    }
++}
++# endif
++
+ # ifdef DEBUG_TERMRESPONSE
+     static void
+ log_tr(char *msg)
+@@ -4204,11 +4243,12 @@ check_termcode(max_offset, buf, bufsize, buflen)
+ 	     *   The final byte must be 'R'. It is used for checking the
+ 	     *   ambiguous-width character state.
+ 	     */
+-	    p = tp[0] == CSI ? tp + 1 : tp + 2;
++	    char_u *argp = tp[0] == ESC ? tp + 2 : tp + 1;
++
+ 	    if ((*T_CRV != NUL || *T_U7 != NUL)
+-			&& ((tp[0] == ESC && tp[1] == '[' && len >= 3)
++			&& ((tp[0] == ESC && len >= 3 && tp[1] == '[')
+ 			    || (tp[0] == CSI && len >= 2))
+-			&& (VIM_ISDIGIT(*p) || *p == '>' || *p == '?'))
++			&& (VIM_ISDIGIT(*argp) || *argp == '>' || *argp == '?'))
+ 	    {
+ #ifdef FEAT_MBYTE
+ 		int col;
+@@ -4346,18 +4386,78 @@ check_termcode(max_offset, buf, bufsize, buflen)
+ 		}
+ 	    }
+ 
+-	    /* Check for '<Esc>P1+r<hex bytes><Esc>\'.  A "0" instead of the
+-	     * "1" means an invalid request. */
++	    /* Check for background color response from the terminal:
++	     *
++	     *       {lead}11;rgb:{rrrr}/{gggg}/{bbbb}{tail}
++	     *
++	     * {lead} can be <Esc>] or OSC
++	     * {tail} can be '\007', <Esc>\ or STERM.
++	     *
++	     * Consume any code that starts with "{lead}11;", it's also
++	     * possible that "rgba" is following.
++	     */
++	    else if (*T_RBG != NUL
++			&& ((tp[0] == ESC && len >= 2 && tp[1] == ']')
++			    || tp[0] == OSC))
++	    {
++		j = 1 + (tp[0] == ESC);
++		if (len >= j + 3 && (argp[0] != '1'
++					 || argp[1] != '1' || argp[2] != ';'))
++		  i = 0; /* no match */
++		else
++		  for (i = j; i < len; ++i)
++		    if (tp[i] == '\007' || (tp[0] == OSC ? tp[i] == STERM
++			: (tp[i] == ESC && i + 1 < len && tp[i + 1] == '\\')))
++		    {
++			if (i - j >= 21 && STRNCMP(tp + j + 3, "rgb:", 4) == 0
++			    && tp[j + 11] == '/' && tp[j + 16] == '/'
++			    && !option_was_set((char_u *)"bg"))
++			{/* TODO: don't set option when already the right value */
++			    LOG_TR("Received RBG");
++			    rbg_status = RBG_GOT;
++			    set_option_value((char_u *)"bg", 0L, (char_u *)(
++				    (3 * '6' < tp[j+7] + tp[j+12] + tp[j+17])
++				    ? "light" : "dark"), 0);
++			    reset_option_was_set((char_u *)"bg");
++			    redraw_asap(CLEAR);
++			}
++
++			/* got finished code: consume it */
++			key_name[0] = (int)KS_EXTRA;
++			key_name[1] = (int)KE_IGNORE;
++			slen = i + 1 + (tp[i] == ESC);
++			break;
++		    }
++		if (i == len)
++		{
++		    LOG_TR("not enough characters for RB");
++		    return -1;
++		}
++	    }
++
++	    /* Check for key code response from xterm:
++	     *
++	     * {lead}{flag}+r<hex bytes><{tail}
++	     *
++	     * {lead} can be <Esc>P or DCS
++	     * {flag} can be '0' or '1'
++	     * {tail} can be Esc>\ or STERM
++	     *
++	     * Consume any code that starts with "{lead}.+r".
++	     */
+ 	    else if (check_for_codes
+-		    && ((tp[0] == ESC && tp[1] == 'P' && len >= 2)
++		    && ((tp[0] == ESC && len >= 2 && tp[1] == 'P')
+ 			|| tp[0] == DCS))
+ 	    {
+-		j = 1 + (tp[0] != DCS);
+-		for (i = j; i < len; ++i)
+-		    if ((tp[i] == ESC && tp[i + 1] == '\\' && i + 1 < len)
++		j = 1 + (tp[0] == ESC);
++		if (len >= j + 3 && (argp[1] != '+' || argp[2] != 'r'))
++		  i = 0; /* no match */
++		else
++		  for (i = j; i < len; ++i)
++		    if ((tp[i] == ESC && i + 1 < len && tp[i + 1] == '\\')
+ 			    || tp[i] == STERM)
+ 		    {
+-			if (i - j >= 3 && tp[j + 1] == '+' && tp[j + 2] == 'r')
++			if (i - j >= 3)
+ 			    got_code_from_term(tp + j, i);
+ 			key_name[0] = (int)KS_EXTRA;
+ 			key_name[1] = (int)KE_IGNORE;
+@@ -4367,8 +4467,10 @@ check_termcode(max_offset, buf, bufsize, buflen)
+ 
+ 		if (i == len)
+ 		{
++		    /* These codes arrive many together, each code can be
++		     * truncated at any point. */
+ 		    LOG_TR("not enough characters for XT");
+-		    return -1;		/* not enough characters */
++		    return -1;
+ 		}
+ 	    }
+ 	}
+diff --git a/src/term.h b/src/term.h
+index 28390a2..4925599 100644
+--- a/src/term.h
++++ b/src/term.h
+@@ -79,6 +79,7 @@ enum SpecialKey
+     KS_CWP,	/* set window position in pixels */
+     KS_CWS,	/* set window size in characters */
+     KS_CRV,	/* request version string */
++    KS_RBG,	/* request background color */
+     KS_CSI,	/* start insert mode (bar cursor) */
+     KS_CEI,	/* end insert mode (block cursor) */
+ #ifdef FEAT_VERTSPLIT
+@@ -160,6 +161,7 @@ extern char_u *(term_strings[]);    /* current terminal strings */
+ #define T_CSI	(term_str(KS_CSI))	/* start insert mode */
+ #define T_CEI	(term_str(KS_CEI))	/* end insert mode */
+ #define T_CRV	(term_str(KS_CRV))	/* request version string */
++#define T_RBG	(term_str(KS_RBG))	/* request background RGB */
+ #define T_OP	(term_str(KS_OP))	/* original color pair */
+ #define T_U7	(term_str(KS_U7))	/* request cursor position */
+ 
+diff --git a/src/option.c b/src/option.c
+index e20efc1..7da18a5 100644
+--- a/src/option.c
++++ b/src/option.c
+@@ -2939,11 +2939,11 @@ static struct vimoption
+ #ifdef FEAT_VERTSPLIT
+     p_term("t_CV", T_CSV)
+ #endif
+-    p_term("t_ut", T_UT)
+     p_term("t_da", T_DA)
+     p_term("t_db", T_DB)
+     p_term("t_DL", T_CDL)
+     p_term("t_dl", T_DL)
++    p_term("t_EI", T_CEI)
+     p_term("t_fs", T_FS)
+     p_term("t_IE", T_CIE)
+     p_term("t_IS", T_CIS)
+@@ -2957,27 +2957,28 @@ static struct vimoption
+     p_term("t_ms", T_MS)
+     p_term("t_nd", T_ND)
+     p_term("t_op", T_OP)
++    p_term("t_RB", T_RBG)
+     p_term("t_RI", T_CRI)
+     p_term("t_RV", T_CRV)
+-    p_term("t_u7", T_U7)
+     p_term("t_Sb", T_CSB)
+-    p_term("t_Sf", T_CSF)
+     p_term("t_se", T_SE)
++    p_term("t_Sf", T_CSF)
++    p_term("t_SI", T_CSI)
+     p_term("t_so", T_SO)
+     p_term("t_sr", T_SR)
+-    p_term("t_ts", T_TS)
+     p_term("t_te", T_TE)
+     p_term("t_ti", T_TI)
++    p_term("t_ts", T_TS)
++    p_term("t_u7", T_U7)
+     p_term("t_ue", T_UE)
+     p_term("t_us", T_US)
++    p_term("t_ut", T_UT)
+     p_term("t_vb", T_VB)
+     p_term("t_ve", T_VE)
+     p_term("t_vi", T_VI)
+     p_term("t_vs", T_VS)
+     p_term("t_WP", T_CWP)
+     p_term("t_WS", T_CWS)
+-    p_term("t_SI", T_CSI)
+-    p_term("t_EI", T_CEI)
+     p_term("t_xn", T_XN)
+     p_term("t_xs", T_XS)
+     p_term("t_ZH", T_CZH)
+diff --git a/src/term.c b/src/term.c
+index 660df07..b4b0c4b 100644
+--- a/src/term.c
++++ b/src/term.c
+@@ -1622,7 +1622,7 @@ set_termname(term)
+ 				{KS_TS, "ts"}, {KS_FS, "fs"},
+ 				{KS_CWP, "WP"}, {KS_CWS, "WS"},
+ 				{KS_CSI, "SI"}, {KS_CEI, "EI"},
+-				{KS_U7, "u7"},
++				{KS_U7, "u7"}, {KS_RBG, "RB"},
+ 				{(enum SpecialKey)0, NULL}
+ 			    };
+ 
