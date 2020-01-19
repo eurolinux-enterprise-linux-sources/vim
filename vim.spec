@@ -20,7 +20,7 @@ Summary: The VIM editor
 URL:     http://www.vim.org/
 Name: vim
 Version: %{baseversion}.%{patchlevel}
-Release: 2%{?dist}
+Release: 4%{?dist}
 License: Vim
 Group: Applications/Editors
 Source0: ftp://ftp.vim.org/pub/vim/unix/vim-%{baseversion}.tar.bz2
@@ -222,6 +222,10 @@ Patch3013: vim-7.3-xsubpp-path.patch
 Patch3014: vim-manpagefixes-948566.patch
 Patch3015: vim-7.4-CVE-2016-1248.patch
 Patch3016: vim-7.4-yamlsyntax.patch
+# 1267826 - Include c++11 syntax highlighting in vim
+Patch3017: vim-7.4-c++11.patch
+# 1319760 - [RFE] Vim should support blowfish2, plus ensure that RHEL6 encrypted files can be opened in RHEL7
+Patch3018: vim-7.4-blowfish2.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: python-devel ncurses-devel gettext perl-devel
@@ -537,6 +541,8 @@ perl -pi -e "s,bin/nawk,bin/awk,g" runtime/tools/mve.awk
 %patch3014 -p1
 %patch3015 -p1
 %patch3016 -p1
+%patch3017 -p1
+%patch3018 -p1
 
 %build
 cp -f %{SOURCE5} .
@@ -746,8 +752,8 @@ sed -i -e "s/augroup fedora/augroup redhat/" %{buildroot}/%{_sysconfdir}/vimrc
 sed -i -e "s/augroup fedora/augroup redhat/" %{buildroot}/%{_sysconfdir}/virc
 %endif
 (cd %{buildroot}/%{_datadir}/%{name}/%{vimdir}/doc;
- gzip -9 *.txt
- gzip -d help.txt.gz version7.txt.gz sponsor.txt.gz
+ gzip -n -9 *.txt
+ gzip -n -d help.txt.gz version7.txt.gz sponsor.txt.gz
  cp %{SOURCE12} .
  cat tags | sed -e 's/\t\(.*.txt\)\t/\t\1.gz\t/;s/\thelp.txt.gz\t/\thelp.txt\t/;s/\tversion7.txt.gz\t/\tversion7.txt\t/;s/\tsponsor.txt.gz\t/\tsponsor.txt\t/' > tags.new; mv -f tags.new tags
 cat >> tags << EOF
@@ -1020,6 +1026,13 @@ rm -rf %{buildroot}
 %{_datadir}/icons/hicolor/*/apps/*
 
 %changelog
+* Tue Sep 05 2017 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-4
+- fixed upstream tests, which failed after last build
+
+* Wed Aug 23 2017 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-3
+- 1267826 - Include c++11 syntax highlighting in vim
+- 1319760 - [RFE] Vim should support blowfish2, plus ensure that RHEL6 encrypted files can be opened in RHEL7
+
 * Fri Jan 20 2017 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-2
 - 1383902 - CPU spikes to 100% and timeouts observed in strace when opening yaml extensions using vim
 
