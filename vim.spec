@@ -20,7 +20,7 @@ Summary: The VIM editor
 URL:     http://www.vim.org/
 Name: vim
 Version: %{baseversion}.%{patchlevel}
-Release: 5%{?dist}
+Release: 6%{?dist}
 License: Vim
 Group: Applications/Editors
 Source0: ftp://ftp.vim.org/pub/vim/unix/vim-%{baseversion}.tar.bz2
@@ -226,6 +226,8 @@ Patch3016: vim-7.4-yamlsyntax.patch
 Patch3017: vim-7.4-c++11.patch
 # 1319760 - [RFE] Vim should support blowfish2, plus ensure that RHEL6 encrypted files can be opened in RHEL7
 Patch3018: vim-7.4-blowfish2.patch
+# 1719963 - CVE-2019-12735 source command allows arbitrary command execution via the modeline
+Patch3019: 0001-patch-8.1.1365-source-command-doesn-t-check-for-the-.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: python-devel ncurses-devel gettext perl-devel
@@ -543,6 +545,7 @@ perl -pi -e "s,bin/nawk,bin/awk,g" runtime/tools/mve.awk
 %patch3016 -p1
 %patch3017 -p1
 %patch3018 -p1
+%patch3019 -p1
 
 %build
 cp -f %{SOURCE5} .
@@ -1027,6 +1030,9 @@ rm -rf %{buildroot}
 %{_datadir}/icons/hicolor/*/apps/*
 
 %changelog
+* Fri Jun 14 2019 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-6
+- 1719963 - CVE-2019-12735 source command allows arbitrary command execution via the modeline
+
 * Mon Jun 18 2018 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-5
 - 1490927 - vim dumps core when system reboots
 
