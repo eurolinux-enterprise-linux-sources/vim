@@ -1,0 +1,22 @@
+diff -up vim74/runtime/syntax/yaml.vim.yamlsyntax vim74/runtime/syntax/yaml.vim
+--- vim74/runtime/syntax/yaml.vim.yamlsyntax	2016-11-25 13:08:38.621772847 +0100
++++ vim74/runtime/syntax/yaml.vim	2016-11-25 15:04:38.170017620 +0100
+@@ -103,14 +103,15 @@ execute 'syn match yamlPlainScalar conta
+ syn match yamlMappingKeyStart '?\ze\s'
+ syn match yamlMappingKeyStart '?' contained
+ 
+-execute 'syn match yamlFlowMappingKey /'.s:ns_plain_in.'\ze\s*:/ contained '.
++execute 'syn match yamlFlowMappingKey /\%#=1'.s:ns_plain_in.'\%(\s\+'.s:ns_plain_in.'\)*\ze\s*:/ contained '.
+             \'nextgroup=yamlKeyValueDelimiter'
+ syn match yamlFlowMappingMerge /<<\ze\s*:/ contained nextgroup=yamlKeyValueDelimiter
+ 
+ syn match yamlBlockCollectionItemStart '^\s*\zs-\%(\s\+-\)*\s' nextgroup=yamlBlockMappingKey,yamlBlockMappingMerge
+-execute 'syn match yamlBlockMappingKey /^\s*\zs'.s:ns_plain_out.'\ze\s*:\%(\s\|$\)/ '.
++" Use the old regexp engine, the NFA engine doesn't like all the \@ items.
++execute 'syn match yamlBlockMappingKey /\%#=1^\s*\zs'.s:ns_plain_out.'\%(\s\+'.s:ns_plain_out.'\)*\ze\s*:\%(\s\|$\)/ '.
+             \'nextgroup=yamlKeyValueDelimiter'
+-execute 'syn match yamlBlockMappingKey /\s*\zs'.s:ns_plain_out.'\ze\s*:\%(\s\|$\)/ contained '.
++execute 'syn match yamlBlockMappingKey /\%#=1\s*\zs'.s:ns_plain_out.'\%(\s\+'.s:ns_plain_out.'\)*\ze\s*:\%(\s\|$\)/ contained '.
+             \'nextgroup=yamlKeyValueDelimiter'
+ syn match yamlBlockMappingMerge /^\s*\zs<<\ze:\%(\s\|$\)/ nextgroup=yamlKeyValueDelimiter
+ syn match yamlBlockMappingMerge /<<\ze\s*:\%(\s\|$\)/ nextgroup=yamlKeyValueDelimiter contained
