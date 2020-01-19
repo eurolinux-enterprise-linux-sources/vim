@@ -20,7 +20,7 @@ Summary: The VIM editor
 URL:     http://www.vim.org/
 Name: vim
 Version: %{baseversion}.%{patchlevel}
-Release: 4%{?dist}
+Release: 5%{?dist}
 License: Vim
 Group: Applications/Editors
 Source0: ftp://ftp.vim.org/pub/vim/unix/vim-%{baseversion}.tar.bz2
@@ -552,8 +552,9 @@ autoconf
 sed -e "s+VIMRCLOC	= \$(VIMLOC)+VIMRCLOC	= /etc+" Makefile > Makefile.tmp
 mv -f Makefile.tmp Makefile
 
-export CFLAGS="%{optflags} -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=2"
-export CXXFLAGS="%{optflags} -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=2"
+# 1490927 - added -D__linux__ and -D_REENTRANT, because we don't want to use alternative stack for signals (it caused segfault) 
+export CFLAGS="%{optflags} -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=2 -D__linux__ -D_REENTRANT"
+export CXXFLAGS="%{optflags} -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -D_FORTIFY_SOURCE=2 -D__linux__ -D_REENTRANT"
 
 %configure --with-features=huge \
   --enable-pythoninterp=dynamic \
@@ -1026,6 +1027,9 @@ rm -rf %{buildroot}
 %{_datadir}/icons/hicolor/*/apps/*
 
 %changelog
+* Mon Jun 18 2018 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-5
+- 1490927 - vim dumps core when system reboots
+
 * Tue Sep 05 2017 Zdenek Dohnal <zdohnal@redhat.com> - 2:7.4.160-4
 - fixed upstream tests, which failed after last build
 
